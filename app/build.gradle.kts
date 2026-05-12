@@ -58,6 +58,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(platform("io.github.jan-tennert.supabase:bom:3.1.4"))
+
+    implementation("io.github.jan-tennert.supabase:auth-kt")
+
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+
+    implementation("io.ktor:ktor-client-android:3.0.3")
+
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.8.9")
     // ViewModel Compose

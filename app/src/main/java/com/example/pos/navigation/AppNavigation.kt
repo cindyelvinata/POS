@@ -18,6 +18,8 @@ import com.example.pos.ui.theme.RegisterScreen
 import com.example.pos.viewmodel.AuthCheckState
 import com.example.pos.viewmodel.AuthUiState
 import com.example.pos.viewmodel.AuthViewModel
+import com.example.pos.ui.theme.ProductScreen
+import com.example.pos.viewmodel.ProductViewModel
 
 @Composable
 fun AppNavigation(
@@ -176,7 +178,46 @@ fun MainNavHost(
          */
         composable(Screen.Dashboard.route) {
 
-            DashboardScreen(
+            val productViewModel: ProductViewModel = viewModel()
+
+            val productUiState =
+                productViewModel.productUiState.collectAsStateWithLifecycle()
+
+            val name =
+                productViewModel.name.collectAsStateWithLifecycle()
+
+            val price =
+                productViewModel.price.collectAsStateWithLifecycle()
+
+            val stock =
+                productViewModel.stock.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+
+                productViewModel.loadProducts()
+            }
+
+            ProductScreen(
+
+                name = name.value,
+                price = price.value,
+                stock = stock.value,
+
+                productUiState = productUiState.value,
+
+                onNameChange =
+                    productViewModel::onNameChange,
+
+                onPriceChange =
+                    productViewModel::onPriceChange,
+
+                onStockChange =
+                    productViewModel::onStockChange,
+
+                onAddClick = {
+
+                    productViewModel.addProduct()
+                },
 
                 onLogoutClick = {
 
