@@ -17,6 +17,8 @@ fun ProductScreen(
     price: String,
     stock: String,
 
+    isEditMode: Boolean,
+
     productUiState: ProductUiState,
 
     onNameChange: (String) -> Unit,
@@ -24,6 +26,8 @@ fun ProductScreen(
     onStockChange: (String) -> Unit,
 
     onAddClick: () -> Unit,
+    onUpdateClick: () -> Unit,
+    onEditClick: (Product) -> Unit,
     onLogoutClick: () -> Unit
 
 ) {
@@ -47,6 +51,7 @@ fun ProductScreen(
             TextButton(
                 onClick = onLogoutClick
             ) {
+
                 Text("Logout")
             }
         }
@@ -87,10 +92,25 @@ fun ProductScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Button(
-            onClick = onAddClick,
+            onClick = {
+
+                if (isEditMode) {
+                    onUpdateClick()
+                } else {
+                    onAddClick()
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Tambah Produk")
+
+            Text(
+
+                if (isEditMode) {
+                    "Perbarui Produk"
+                } else {
+                    "Tambah Produk"
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -116,7 +136,15 @@ fun ProductScreen(
 
                     items(productUiState.products) { product ->
 
-                        ProductItem(product)
+                        ProductItem(
+
+                            product = product,
+
+                            onEditClick = {
+
+                                onEditClick(product)
+                            }
+                        )
                     }
                 }
             }
@@ -126,7 +154,8 @@ fun ProductScreen(
 
 @Composable
 fun ProductItem(
-    product: Product
+    product: Product,
+    onEditClick: () -> Unit
 ) {
 
     Card(
@@ -161,6 +190,15 @@ fun ProductItem(
                     "Status: Nonaktif"
                 }
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = onEditClick
+            ) {
+
+                Text("Edit")
+            }
         }
     }
 }

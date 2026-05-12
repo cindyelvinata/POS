@@ -2,6 +2,7 @@ package com.example.pos.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.pos.model.Product
 import com.example.pos.repository.ProductRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,26 +13,51 @@ class ProductViewModel : ViewModel() {
     private val repository = ProductRepository()
 
     /*
-     * State untuk UI produk
+     * Menyimpan ID produk yang sedang diedit
+     */
+    private var selectedProductId: String? = null
+
+    /*
+     * State mode edit
+     */
+    private val _isEditMode =
+        MutableStateFlow(false)
+
+    val isEditMode: StateFlow<Boolean> =
+        _isEditMode
+
+    /*
+     * State UI produk
      */
     private val _productUiState =
         MutableStateFlow<ProductUiState>(ProductUiState.Loading)
-    val productUiState: StateFlow<ProductUiState> = _productUiState
 
+    val productUiState: StateFlow<ProductUiState> =
+        _productUiState
+
+    /*
+     * State form input
+     */
     private val _name =
         MutableStateFlow("")
-    val name: StateFlow<String> = _name
+
+    val name: StateFlow<String> =
+        _name
 
     private val _price =
         MutableStateFlow("")
-    val price: StateFlow<String> = _price
+
+    val price: StateFlow<String> =
+        _price
 
     private val _stock =
         MutableStateFlow("")
-    val stock: StateFlow<String> = _stock
+
+    val stock: StateFlow<String> =
+        _stock
 
     /*
-     * Mengambil data products dari Supabase
+     * Load semua products
      */
     fun loadProducts() {
 
@@ -39,14 +65,18 @@ class ProductViewModel : ViewModel() {
 
             try {
 
-                _productUiState.value = ProductUiState.Loading
+                _productUiState.value =
+                    ProductUiState.Loading
 
-                val products = repository.getProducts()
+                val products =
+                    repository.getProducts()
 
                 _productUiState.value =
                     ProductUiState.Success(products)
 
             } catch (e: Exception) {
+
+                e.printStackTrace()
 
                 _productUiState.value =
                     ProductUiState.Error(
@@ -55,6 +85,10 @@ class ProductViewModel : ViewModel() {
             }
         }
     }
+
+    /*
+     * Update input
+     */
     fun onNameChange(value: String) {
         _name.value = value
     }
@@ -66,6 +100,24 @@ class ProductViewModel : ViewModel() {
     fun onStockChange(value: String) {
         _stock.value = value
     }
+
+    /*
+     * Isi form saat edit
+     */
+    fun fillForm(product: Product) {
+
+        selectedProductId = product.id
+
+        _isEditMode.value = true
+
+        _name.value = product.name
+        _price.value = product.price.toString()
+        _stock.value = product.stock.toString()
+    }
+
+    /*
+     * Tambah produk
+     */
     fun addProduct() {
 
         viewModelScope.launch {
@@ -78,9 +130,9 @@ class ProductViewModel : ViewModel() {
                     stock = _stock.value.toDoubleOrNull() ?: 0.0
                 )
 
-                _name.value = ""
-                _price.value = ""
-                _stock.value = ""
+                clearForm()
+
+                _isEditMode.value = false
 
                 loadProducts()
 
@@ -94,5 +146,55 @@ class ProductViewModel : ViewModel() {
                     )
             }
         }
+    }
+
+    /*
+     * Update produk
+     */
+    fun updateProduct() {
+
+        val productId =
+            selectedProductId ?: return
+
+        viewModelScope.launch {
+
+            try {
+
+                repository.updateProduct(
+                    id = productId,
+                    name = _name.value,
+                    price = _price.value.toDoubleOrNull() ?: 0.0,
+                    stock = _stock.value.toDoubleOrNull() ?: 0.0,
+                    isActive = true
+                )
+
+                clearForm()
+
+                selectedProductId = null
+
+                _isEditMode.value = false
+
+                loadProducts()
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
+
+                _productUiState.value =
+                    ProductUiState.Error(
+                        e.message ?: "Gagal update produk"
+                    )
+            }
+        }
+    }
+
+    /*
+     * Bersihkan form
+     */
+    private fun clearForm() {
+
+        _name.value = ""
+        _price.value = ""
+        _stock.value = ""
     }
 }

@@ -12,13 +12,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.pos.ui.theme.DashboardScreen
 import com.example.pos.ui.theme.LoginScreen
+import com.example.pos.ui.theme.ProductScreen
 import com.example.pos.ui.theme.RegisterScreen
 import com.example.pos.viewmodel.AuthCheckState
 import com.example.pos.viewmodel.AuthUiState
 import com.example.pos.viewmodel.AuthViewModel
-import com.example.pos.ui.theme.ProductScreen
 import com.example.pos.viewmodel.ProductViewModel
 
 @Composable
@@ -29,10 +28,6 @@ fun AppNavigation(
     val authCheckState =
         authViewModel.authCheckState.collectAsStateWithLifecycle()
 
-    /*
-     * Saat aplikasi dibuka,
-     * cek dulu status login user.
-     */
     when (authCheckState.value) {
 
         is AuthCheckState.Checking -> {
@@ -72,9 +67,6 @@ fun MainNavHost(
 
     val navController = rememberNavController()
 
-    /*
-     * Collect semua state dari ViewModel.
-     */
     val fullName =
         authViewModel.fullName.collectAsStateWithLifecycle()
 
@@ -87,10 +79,6 @@ fun MainNavHost(
     val uiState =
         authViewModel.uiState.collectAsStateWithLifecycle()
 
-    /*
-     * Jika login/register berhasil,
-     * pindah ke dashboard.
-     */
     LaunchedEffect(uiState.value) {
 
         if (uiState.value is AuthUiState.Success) {
@@ -112,7 +100,7 @@ fun MainNavHost(
     ) {
 
         /*
-         * LOGIN SCREEN
+         * LOGIN
          */
         composable(Screen.Login.route) {
 
@@ -141,7 +129,7 @@ fun MainNavHost(
         }
 
         /*
-         * REGISTER SCREEN
+         * REGISTER
          */
         composable(Screen.Register.route) {
 
@@ -174,7 +162,7 @@ fun MainNavHost(
         }
 
         /*
-         * DASHBOARD SCREEN
+         * DASHBOARD / PRODUCT
          */
         composable(Screen.Dashboard.route) {
 
@@ -192,6 +180,9 @@ fun MainNavHost(
             val stock =
                 productViewModel.stock.collectAsStateWithLifecycle()
 
+            val isEditMode =
+                productViewModel.isEditMode.collectAsStateWithLifecycle()
+
             LaunchedEffect(Unit) {
 
                 productViewModel.loadProducts()
@@ -202,6 +193,8 @@ fun MainNavHost(
                 name = name.value,
                 price = price.value,
                 stock = stock.value,
+
+                isEditMode = isEditMode.value,
 
                 productUiState = productUiState.value,
 
@@ -217,6 +210,16 @@ fun MainNavHost(
                 onAddClick = {
 
                     productViewModel.addProduct()
+                },
+
+                onUpdateClick = {
+
+                    productViewModel.updateProduct()
+                },
+
+                onEditClick = { product ->
+
+                    productViewModel.fillForm(product)
                 },
 
                 onLogoutClick = {
