@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
+    isAdmin: Boolean,
     onLogoutClick: () -> Unit,
     onNavigateToKas: () -> Unit = {},
     kasViewModel: KasViewModel = viewModel()

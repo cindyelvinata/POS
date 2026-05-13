@@ -28,19 +28,16 @@ import java.text.NumberFormat
 import java.util.Locale
 
 /* =============================================
- * HELPER: Format angka ke Rupiah
+ * HELPER FUNCTIONS
  * ============================================= */
 fun formatRupiah(amount: Double): String {
     val formatter = NumberFormat.getCurrencyInstance(Locale("id", "ID"))
     return formatter.format(amount)
 }
 
-/* =============================================
- * HELPER: Format tanggal dari ISO string
- * ============================================= */
 fun formatDate(isoString: String): String {
     return try {
-        val date = isoString.substring(0, 10)  // "YYYY-MM-DD"
+        val date = isoString.substring(0, 10)
         val parts = date.split("-")
         "${parts[2]}/${parts[1]}/${parts[0]}"
     } catch (e: Exception) {
@@ -49,29 +46,37 @@ fun formatDate(isoString: String): String {
 }
 
 /* =============================================
- * KAS SCREEN - Halaman utama daftar kas
+ * KAS SCREEN
+ *
+ * isAdmin = true  (ADMIN)
+ *   → FAB tambah kas muncul
+ *   → Semua kas tampil (aktif + non-aktif)
+ *   → Badge status tampil di kartu
+ *
+ * isAdmin = false (CASHIER)
+ *   → Tidak ada FAB
+ *   → Hanya kas aktif yang tampil
+ *   → Tidak ada badge status
  * ============================================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KasScreen(
+    isAdmin: Boolean,
     onNavigateBack: () -> Unit,
     onNavigateToAddKas: () -> Unit,
-    onNavigateToDetailKas: (String) -> Unit,  // kirim ID kas
+    onNavigateToDetailKas: (String) -> Unit,
     kasViewModel: KasViewModel = viewModel()
 ) {
     val cashAccounts by kasViewModel.cashAccounts.collectAsStateWithLifecycle()
-    val isLoading by kasViewModel.isLoadingAccounts.collectAsStateWithLifecycle()
-    val uiState by kasViewModel.uiState.collectAsStateWithLifecycle()
+    val isLoading    by kasViewModel.isLoadingAccounts.collectAsStateWithLifecycle()
+    val uiState      by kasViewModel.uiState.collectAsStateWithLifecycle()
 
-    // Muat data saat screen pertama kali muncul
     LaunchedEffect(Unit) {
         kasViewModel.loadCashAccounts()
     }
 
-    // Snackbar host
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Tampilkan error jika ada
     LaunchedEffect(uiState) {
         if (uiState is KasUiState.Error) {
             snackbarHostState.showSnackbar((uiState as KasUiState.Error).message)
@@ -95,12 +100,17 @@ fun KasScreen(
                 )
             )
         },
+        /*
+         * FAB hanya muncul untuk ADMIN.
+         */
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToAddKas,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Tambah Kas", tint = Color.White)
+            if (isAdmin) {
+                FloatingActionButton(
+                    onClick = onNavigateToAddKas,
+                    containerColor = MaterialTheme.colorScheme.primary
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Tambah Kas", tint = Color.White)
+                }
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -122,8 +132,14 @@ fun KasScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text("Belum ada data kas", color = Color.Gray)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("Tap + untuk menambah kas baru", color = Color.Gray, fontSize = 13.sp)
+                        if (isAdmin) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Tap + untuk menambah kas baru",
+                                color = Color.Gray,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
 
@@ -133,10 +149,18 @@ fun KasScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(cashAccounts) { account ->
+                        /*
+                         * Admin → lihat semua kas (aktif + non-aktif)
+                         * Cashier → hanya lihat kas aktif
+                         */
+                        val displayed = if (isAdmin) cashAccounts
+                        else cashAccounts.filter { it.isActive }
+
+                        items(displayed) { account ->
                             KasCard(
-                                account = account,
-                                onClick = { onNavigateToDetailKas(account.id) }
+                                account  = account,
+                                isAdmin  = isAdmin,
+                                onClick  = { onNavigateToDetailKas(account.id) }
                             )
                         }
                     }
@@ -147,98 +171,93 @@ fun KasScreen(
 }
 
 /* =============================================
- * KAS CARD - Item kartu untuk satu kas
+ * KAS CARD
+ *
+ * isAdmin → tampilkan badge Aktif/Non-aktif
+ * Cashier → tidak perlu tahu status, hanya lihat saldo
  * ============================================= */
 @Composable
 fun KasCard(
     account: CashAccount,
+    isAdmin: Boolean,
     onClick: () -> Unit
 ) {
-    val statusColor = if (account.isActive) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
-    val statusText = if (account.isActive) "Aktif" else "Non-aktif"
-    val cardAlpha = if (account.isActive) 1f else 0.6f
+    val cardAlpha    = if (account.isActive) 1f else 0.55f
+    val statusColor  = if (account.isActive) Color(0xFF4CAF50) else Color(0xFF9E9E9E)
+    val statusText   = if (account.isActive) "Aktif" else "Non-aktif"
+    val iconBg       = if (account.isActive)
+        MaterialTheme.colorScheme.primaryContainer else Color(0xFFE0E0E0)
+    val iconColor    = if (account.isActive)
+        MaterialTheme.colorScheme.onPrimaryContainer else Color.Gray
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
+        shape     = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
+        colors    = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier  = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Ikon lingkaran kiri
+            // Avatar inisial
             Box(
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(
-                        if (account.isActive)
-                            MaterialTheme.colorScheme.primaryContainer
-                        else
-                            Color(0xFFE0E0E0)
-                    ),
+                    .background(iconBg),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = account.name.take(1).uppercase(),
+                    text       = account.name.take(1).uppercase(),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = if (account.isActive)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        Color.Gray
+                    fontSize   = 20.sp,
+                    color      = iconColor
                 )
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Info kas
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = account.name,
+                    text       = account.name,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = cardAlpha)
+                    fontSize   = 16.sp,
+                    color      = MaterialTheme.colorScheme.onSurface.copy(alpha = cardAlpha)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = formatRupiah(account.currentBalance),
+                    text       = formatRupiah(account.currentBalance),
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = if (account.isActive)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        Color.Gray
+                    fontSize   = 18.sp,
+                    color      = if (account.isActive)
+                        MaterialTheme.colorScheme.primary else Color.Gray
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Dibuat: ${formatDate(account.createdAt)}",
+                    text     = "Dibuat: ${formatDate(account.createdAt)}",
                     fontSize = 11.sp,
-                    color = Color.Gray
+                    color    = Color.Gray
                 )
             }
 
-            // Badge status
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(statusColor.copy(alpha = 0.15f))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = statusText,
-                    color = statusColor,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium
-                )
+            // Badge status hanya untuk ADMIN
+            if (isAdmin) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(statusColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text       = statusText,
+                        color      = statusColor,
+                        fontSize   = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

@@ -29,28 +29,16 @@ fun AppNavigation(
     val authCheckState = authViewModel.authCheckState.collectAsStateWithLifecycle()
 
     when (authCheckState.value) {
-
         is AuthCheckState.Checking -> {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
             }
         }
-
         is AuthCheckState.Authenticated -> {
-            MainNavHost(
-                authViewModel = authViewModel,
-                startDestination = Screen.Dashboard.route
-            )
+            MainNavHost(authViewModel = authViewModel, startDestination = Screen.Dashboard.route)
         }
-
         is AuthCheckState.NotAuthenticated -> {
-            MainNavHost(
-                authViewModel = authViewModel,
-                startDestination = Screen.Login.route
-            )
+            MainNavHost(authViewModel = authViewModel, startDestination = Screen.Login.route)
         }
     }
 }
@@ -63,16 +51,22 @@ fun MainNavHost(
     val navController = rememberNavController()
 
     /*
-     * KasViewModel dibuat di sini agar instance-nya sama
-     * di KasScreen, AddKasScreen, dan DashboardScreen.
-     * Tidak perlu buat ulang tiap pindah halaman.
+     * KasViewModel satu instance untuk seluruh NavHost.
+     * Tidak dibuat ulang saat pindah halaman.
      */
     val kasViewModel: KasViewModel = viewModel()
 
-    val fullName = authViewModel.fullName.collectAsStateWithLifecycle()
-    val email = authViewModel.email.collectAsStateWithLifecycle()
-    val password = authViewModel.password.collectAsStateWithLifecycle()
-    val uiState = authViewModel.uiState.collectAsStateWithLifecycle()
+    val fullName    = authViewModel.fullName.collectAsStateWithLifecycle()
+    val email       = authViewModel.email.collectAsStateWithLifecycle()
+    val password    = authViewModel.password.collectAsStateWithLifecycle()
+    val uiState     = authViewModel.uiState.collectAsStateWithLifecycle()
+
+    /*
+     * userRole di-collect di sini lalu diteruskan sebagai isAdmin
+     * ke setiap screen yang membutuhkan pembatasan akses.
+     */
+    val userRole    = authViewModel.userRole.collectAsStateWithLifecycle()
+    val isAdmin     = userRole.value == "admin"
 
     LaunchedEffect(uiState.value) {
         if (uiState.value is AuthUiState.Success) {
@@ -83,22 +77,19 @@ fun MainNavHost(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
         /* =============================================
-         * LOGIN SCREEN
+         * LOGIN
          * ============================================= */
         composable(Screen.Login.route) {
             LoginScreen(
-                email = email.value,
-                password = password.value,
-                uiState = uiState.value,
-                onEmailChange = authViewModel::onEmailChange,
+                email            = email.value,
+                password         = password.value,
+                uiState          = uiState.value,
+                onEmailChange    = authViewModel::onEmailChange,
                 onPasswordChange = authViewModel::onPasswordChange,
-                onLoginClick = { authViewModel.login() },
+                onLoginClick     = { authViewModel.login() },
                 onNavigateToRegister = {
                     navController.navigate(Screen.Register.route)
                 }
@@ -106,76 +97,80 @@ fun MainNavHost(
         }
 
         /* =============================================
-         * REGISTER SCREEN
+         * REGISTER
          * ============================================= */
         composable(Screen.Register.route) {
             RegisterScreen(
-                fullName = fullName.value,
-                email = email.value,
-                password = password.value,
-                uiState = uiState.value,
+                fullName         = fullName.value,
+                email            = email.value,
+                password         = password.value,
+                uiState          = uiState.value,
                 onFullNameChange = authViewModel::onFullNameChange,
-                onEmailChange = authViewModel::onEmailChange,
+                onEmailChange    = authViewModel::onEmailChange,
                 onPasswordChange = authViewModel::onPasswordChange,
-                onRegisterClick = { authViewModel.register() },
+                onRegisterClick  = { authViewModel.register() },
                 onNavigateToLogin = { navController.popBackStack() }
             )
         }
 
         /* =============================================
-         * DASHBOARD SCREEN
+         * DASHBOARD
          * ============================================= */
         composable(Screen.Dashboard.route) {
             DashboardScreen(
-                onLogoutClick = {
+                isAdmin          = isAdmin,
+                kasViewModel     = kasViewModel,
+                onLogoutClick    = {
                     authViewModel.logout()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Dashboard.route) { inclusive = true }
                     }
                 },
-                onNavigateToKas = {
+                onNavigateToKas  = {
                     navController.navigate(Screen.Kas.route)
-                },
-                kasViewModel = kasViewModel
+                }
             )
         }
 
         /* =============================================
-         * KAS SCREEN - Daftar semua kas
+         * KAS SCREEN — daftar semua kas
          * ============================================= */
         composable(Screen.Kas.route) {
             KasScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToAddKas = {
-                    navController.navigate(Screen.AddKas.route)
+                isAdmin              = isAdmin,
+                kasViewModel         = kasViewModel,
+                onNavigateBack       = { navController.popBackStack() },
+                onNavigateToAddKas   = {
+                    if (isAdmin) navController.navigate(Screen.AddKas.route)
                 },
                 onNavigateToDetailKas = { kasId ->
                     navController.navigate(Screen.DetailKas.createRoute(kasId))
-                },
-                kasViewModel = kasViewModel
+                }
             )
         }
 
         /* =============================================
-         * ADD KAS SCREEN - Tambah kas baru
+         * ADD KAS — form buat kas baru (admin only)
          * ============================================= */
         composable(Screen.AddKas.route) {
             AddKasScreen(
-                cashAccountId = null,
-                onNavigateBack = { navController.popBackStack() },
-                kasViewModel = kasViewModel
+                cashAccountId    = null,
+                isAdmin          = isAdmin,
+                kasViewModel     = kasViewModel,
+                onNavigateBack   = { navController.popBackStack() }
             )
         }
 
         /* =============================================
-         * DETAIL KAS SCREEN - Detail, edit, transaksi
+         * DETAIL KAS — info, edit, transaksi, log
          * ============================================= */
         composable(Screen.DetailKas.route) { backStackEntry ->
             val kasId = backStackEntry.arguments?.getString("kasId")
             AddKasScreen(
-                cashAccountId = kasId,
-                onNavigateBack = { navController.popBackStack() },
-                kasViewModel = kasViewModel
+                cashAccountId    = kasId,
+                isAdmin          = isAdmin,
+                kasViewModel     = kasViewModel,
+                onNavigateBack   = { navController.popBackStack() }
             )
         }
     }
