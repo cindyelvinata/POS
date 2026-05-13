@@ -28,6 +28,7 @@ fun ProductScreen(
     onAddClick: () -> Unit,
     onUpdateClick: () -> Unit,
     onEditClick: (Product) -> Unit,
+    onDeleteClick: (Product) -> Unit,
     onLogoutClick: () -> Unit
 
 ) {
@@ -137,12 +138,14 @@ fun ProductScreen(
                     items(productUiState.products) { product ->
 
                         ProductItem(
-
                             product = product,
 
                             onEditClick = {
-
                                 onEditClick(product)
+                            },
+
+                            onDeleteClick = {
+                                onDeleteClick(product)
                             }
                         )
                     }
@@ -155,7 +158,8 @@ fun ProductScreen(
 @Composable
 fun ProductItem(
     product: Product,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
 
     Card(
@@ -193,11 +197,21 @@ fun ProductItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = onEditClick
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
 
-                Text("Edit")
+                Button(
+                    onClick = onEditClick
+                ) {
+                    Text("Edit")
+                }
+
+                Button(
+                    onClick = onDeleteClick
+                ) {
+                    Text("Hapus")
+                }
             }
         }
     }

@@ -189,6 +189,31 @@ class ProductViewModel : ViewModel() {
     }
 
     /*
+     * Soft delete produk
+     */
+    fun deleteProduct(id: String) {
+
+        viewModelScope.launch {
+
+            try {
+
+                repository.deleteProduct(id)
+
+                loadProducts()
+
+            } catch (e: Exception) {
+
+                e.printStackTrace()
+
+                _productUiState.value =
+                    ProductUiState.Error(
+                        e.message ?: "Gagal hapus produk"
+                    )
+            }
+        }
+    }
+
+    /*
      * Bersihkan form
      */
     private fun clearForm() {

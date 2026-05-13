@@ -222,6 +222,11 @@ fun MainNavHost(
                     productViewModel.fillForm(product)
                 },
 
+                onDeleteClick = { product ->
+
+                    productViewModel.deleteProduct(product.id)
+                },
+
                 onLogoutClick = {
 
                     authViewModel.logout()

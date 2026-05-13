@@ -8,21 +8,27 @@ import io.github.jan.supabase.postgrest.from
 
 class ProductRepository {
 
-    private val supabase = SupabaseClientProvider.client
+    private val supabase =
+        SupabaseClientProvider.client
 
     /*
-     * Ambil semua products
+     * Ambil hanya produk aktif
      */
     suspend fun getProducts(): List<Product> {
 
         return supabase
             .from("products")
-            .select()
+            .select {
+
+                filter {
+                    eq("is_active", true)
+                }
+            }
             .decodeList<Product>()
     }
 
     /*
-     * Tambah product
+     * Tambah produk
      */
     suspend fun addProduct(
         name: String,
@@ -43,7 +49,7 @@ class ProductRepository {
     }
 
     /*
-     * Update product
+     * Update produk
      */
     suspend fun updateProduct(
         id: String,
@@ -63,6 +69,26 @@ class ProductRepository {
         supabase
             .from("products")
             .update(product) {
+
+                filter {
+                    eq("id", id)
+                }
+            }
+    }
+
+    /*
+     * Soft delete produk
+     * hanya ubah is_active menjadi false
+     */
+    suspend fun deleteProduct(id: String) {
+
+        supabase
+            .from("products")
+            .update(
+                mapOf(
+                    "is_active" to false
+                )
+            ) {
 
                 filter {
                     eq("id", id)
