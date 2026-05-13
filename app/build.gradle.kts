@@ -69,7 +69,7 @@ dependencies {
     // Supabase Auth
     implementation("io.github.jan-tennert.supabase:auth-kt")
     // Ktor Android Client
-    implementation("io.ktor:ktor-client-android:2.3.12")
+    implementation("io.ktor:ktor-client-android:3.0.3")
     implementation("io.github.jan-tennert.supabase:auth-kt")
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime")
