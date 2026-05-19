@@ -5,18 +5,12 @@ package com.example.pos.navigation
  * Tujuannya agar nama route tidak ditulis manual berkali-kali.
  */
 sealed class Screen(val route: String) {
-    /*
-     * Route untuk halaman login.
-     */
+
     object Login : Screen("login")
 
-    /*
-     * Route untuk halaman register.
-     */
     object Register : Screen("register")
 
-    /*
-     * Route untuk halaman dashboard.
-     */
     object Dashboard : Screen("dashboard")
+
+    object InventoryLog : Screen("inventory_log")
 }

@@ -4,13 +4,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pos.model.Product
 import com.example.pos.viewmodel.ProductUiState
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun ProductScreen(
@@ -23,32 +21,25 @@ fun ProductScreen(
 
     productUiState: ProductUiState,
 
-    selectedProduct: Product?,
-
     onNameChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
     onStockChange: (String) -> Unit,
 
     onAddClick: () -> Unit,
     onUpdateClick: () -> Unit,
-
     onEditClick: (Product) -> Unit,
     onDeleteClick: (Product) -> Unit,
+
     onDetailClick: (Product) -> Unit,
 
-    onDismissDetail: () -> Unit,
+    onInventoryLogClick: () -> Unit,
 
-    onLogoutClick: () -> Unit
+    onLogoutClick: () -> Unit,
 
+    selectedProduct: Product?,
+
+    onDismissDetail: () -> Unit
 ) {
-
-    var showDeleteDialog by remember {
-        mutableStateOf(false)
-    }
-
-    var selectedDeleteProduct by remember {
-        mutableStateOf<Product?>(null)
-    }
 
     Column(
         modifier = Modifier
@@ -58,19 +49,32 @@ fun ProductScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement =
+                Arrangement.SpaceBetween
         ) {
 
             Text(
                 text = "Daftar Produk",
-                style = MaterialTheme.typography.headlineMedium
+                style =
+                    MaterialTheme.typography
+                        .headlineMedium
             )
 
-            TextButton(
-                onClick = onLogoutClick
-            ) {
+            Row {
 
-                Text("Logout")
+                TextButton(
+                    onClick = onInventoryLogClick
+                ) {
+
+                    Text("Inventory Log")
+                }
+
+                TextButton(
+                    onClick = onLogoutClick
+                ) {
+
+                    Text("Logout")
+                }
             }
         }
 
@@ -144,7 +148,8 @@ fun ProductScreen(
 
                 Text(
                     text = productUiState.message,
-                    color = MaterialTheme.colorScheme.error
+                    color =
+                        MaterialTheme.colorScheme.error
                 )
             }
 
@@ -155,6 +160,7 @@ fun ProductScreen(
                     items(productUiState.products) { product ->
 
                         ProductItem(
+
                             product = product,
 
                             onEditClick = {
@@ -162,9 +168,7 @@ fun ProductScreen(
                             },
 
                             onDeleteClick = {
-
-                                selectedDeleteProduct = product
-                                showDeleteDialog = true
+                                onDeleteClick(product)
                             },
 
                             onDetailClick = {
@@ -178,13 +182,25 @@ fun ProductScreen(
     }
 
     /*
-     * Dialog Detail Produk
+     * DETAIL DIALOG
      */
     if (selectedProduct != null) {
 
         AlertDialog(
 
-            onDismissRequest = onDismissDetail,
+            onDismissRequest =
+                onDismissDetail,
+
+            confirmButton = {
+
+                TextButton(
+                    onClick =
+                        onDismissDetail
+                ) {
+
+                    Text("Tutup")
+                }
+            },
 
             title = {
 
@@ -195,89 +211,44 @@ fun ProductScreen(
 
                 Column {
 
-                    Text("Nama: ${selectedProduct.name}")
+                    Text(
+                        text =
+                            "Nama: ${selectedProduct.name}"
+                    )
 
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("Harga: Rp ${selectedProduct.price}")
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("Stock: ${selectedProduct.stock}")
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(
+                        modifier =
+                            Modifier.height(8.dp)
+                    )
 
                     Text(
-                        text = if (selectedProduct.isActive) {
-                            "Status: Aktif"
-                        } else {
-                            "Status: Nonaktif"
-                        }
+                        text =
+                            "Harga: Rp ${selectedProduct.price}"
                     )
-                }
-            },
 
-            confirmButton = {
+                    Spacer(
+                        modifier =
+                            Modifier.height(8.dp)
+                    )
 
-                TextButton(
-                    onClick = onDismissDetail
-                ) {
+                    Text(
+                        text =
+                            "Stock: ${selectedProduct.stock}"
+                    )
 
-                    Text("Tutup")
-                }
-            }
-        )
-    }
+                    Spacer(
+                        modifier =
+                            Modifier.height(8.dp)
+                    )
 
-    /*
-     * Dialog Konfirmasi Hapus
-     */
-    if (showDeleteDialog && selectedDeleteProduct != null) {
-
-        AlertDialog(
-
-            onDismissRequest = {
-
-                showDeleteDialog = false
-            },
-
-            title = {
-
-                Text("Konfirmasi")
-            },
-
-            text = {
-
-                Text("Yakin ingin menonaktifkan produk ini?")
-            },
-
-            confirmButton = {
-
-                TextButton(
-
-                    onClick = {
-
-                        onDeleteClick(selectedDeleteProduct!!)
-
-                        showDeleteDialog = false
-                    }
-                ) {
-
-                    Text("Ya")
-                }
-            },
-
-            dismissButton = {
-
-                TextButton(
-
-                    onClick = {
-
-                        showDeleteDialog = false
-                    }
-                ) {
-
-                    Text("Batal")
+                    Text(
+                        text =
+                            if (selectedProduct.isActive) {
+                                "Status: Aktif"
+                            } else {
+                                "Status: Nonaktif"
+                            }
+                    )
                 }
             }
         )
@@ -286,15 +257,15 @@ fun ProductScreen(
 
 @Composable
 fun ProductItem(
+
     product: Product,
+
     onEditClick: () -> Unit,
+
     onDeleteClick: () -> Unit,
+
     onDetailClick: () -> Unit
 ) {
-
-    val rupiahFormat = NumberFormat.getNumberInstance(
-        Locale("in", "ID")
-    )
 
     Card(
         modifier = Modifier
@@ -303,57 +274,71 @@ fun ProductItem(
     ) {
 
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier =
+                Modifier.padding(16.dp)
         ) {
 
             Text(
                 text = product.name,
-                style = MaterialTheme.typography.titleMedium
+                style =
+                    MaterialTheme.typography
+                        .titleMedium
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Harga: Rp ${rupiahFormat.format(product.price)}"
-            )
-
-            Text(
-                text = "Stock: ${product.stock}"
+            Spacer(
+                modifier = Modifier.height(8.dp)
             )
 
             Text(
-                text = if (product.isActive) {
-                    "Status: Aktif"
-                } else {
-                    "Status: Nonaktif"
-                }
+                text =
+                    "Harga: Rp ${product.price}"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text =
+                    "Stock: ${product.stock}"
+            )
+
+            Text(
+                text =
+                    if (product.isActive) {
+                        "Status: Aktif"
+                    } else {
+                        "Status: Nonaktif"
+                    }
+            )
+
+            Spacer(
+                modifier = Modifier.height(8.dp)
+            )
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement =
+                    Arrangement.spacedBy(8.dp)
             ) {
 
                 Button(
-                    onClick = onEditClick
+                    onClick =
+                        onDetailClick
+                ) {
+
+                    Text("Detail")
+                }
+
+                Button(
+                    onClick =
+                        onEditClick
                 ) {
 
                     Text("Edit")
                 }
 
                 Button(
-                    onClick = onDeleteClick
+                    onClick =
+                        onDeleteClick
                 ) {
 
                     Text("Hapus")
-                }
-
-                Button(
-                    onClick = onDetailClick
-                ) {
-
-                    Text("Detail")
                 }
             }
         }
