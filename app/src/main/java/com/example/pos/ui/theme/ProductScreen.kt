@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.pos.model.Product
 import com.example.pos.viewmodel.ProductUiState
+import java.text.NumberFormat
+import java.util.Locale
 
 @Composable
 fun ProductScreen(
@@ -21,17 +23,32 @@ fun ProductScreen(
 
     productUiState: ProductUiState,
 
+    selectedProduct: Product?,
+
     onNameChange: (String) -> Unit,
     onPriceChange: (String) -> Unit,
     onStockChange: (String) -> Unit,
 
     onAddClick: () -> Unit,
     onUpdateClick: () -> Unit,
+
     onEditClick: (Product) -> Unit,
     onDeleteClick: (Product) -> Unit,
+    onDetailClick: (Product) -> Unit,
+
+    onDismissDetail: () -> Unit,
+
     onLogoutClick: () -> Unit
 
 ) {
+
+    var showDeleteDialog by remember {
+        mutableStateOf(false)
+    }
+
+    var selectedDeleteProduct by remember {
+        mutableStateOf<Product?>(null)
+    }
 
     Column(
         modifier = Modifier
@@ -145,7 +162,13 @@ fun ProductScreen(
                             },
 
                             onDeleteClick = {
-                                onDeleteClick(product)
+
+                                selectedDeleteProduct = product
+                                showDeleteDialog = true
+                            },
+
+                            onDetailClick = {
+                                onDetailClick(product)
                             }
                         )
                     }
@@ -153,14 +176,125 @@ fun ProductScreen(
             }
         }
     }
+
+    /*
+     * Dialog Detail Produk
+     */
+    if (selectedProduct != null) {
+
+        AlertDialog(
+
+            onDismissRequest = onDismissDetail,
+
+            title = {
+
+                Text("Detail Produk")
+            },
+
+            text = {
+
+                Column {
+
+                    Text("Nama: ${selectedProduct.name}")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("Harga: Rp ${selectedProduct.price}")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text("Stock: ${selectedProduct.stock}")
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = if (selectedProduct.isActive) {
+                            "Status: Aktif"
+                        } else {
+                            "Status: Nonaktif"
+                        }
+                    )
+                }
+            },
+
+            confirmButton = {
+
+                TextButton(
+                    onClick = onDismissDetail
+                ) {
+
+                    Text("Tutup")
+                }
+            }
+        )
+    }
+
+    /*
+     * Dialog Konfirmasi Hapus
+     */
+    if (showDeleteDialog && selectedDeleteProduct != null) {
+
+        AlertDialog(
+
+            onDismissRequest = {
+
+                showDeleteDialog = false
+            },
+
+            title = {
+
+                Text("Konfirmasi")
+            },
+
+            text = {
+
+                Text("Yakin ingin menonaktifkan produk ini?")
+            },
+
+            confirmButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        onDeleteClick(selectedDeleteProduct!!)
+
+                        showDeleteDialog = false
+                    }
+                ) {
+
+                    Text("Ya")
+                }
+            },
+
+            dismissButton = {
+
+                TextButton(
+
+                    onClick = {
+
+                        showDeleteDialog = false
+                    }
+                ) {
+
+                    Text("Batal")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun ProductItem(
     product: Product,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onDetailClick: () -> Unit
 ) {
+
+    val rupiahFormat = NumberFormat.getNumberInstance(
+        Locale("in", "ID")
+    )
 
     Card(
         modifier = Modifier
@@ -180,7 +314,7 @@ fun ProductItem(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Harga: Rp ${product.price}"
+                text = "Harga: Rp ${rupiahFormat.format(product.price)}"
             )
 
             Text(
@@ -204,13 +338,22 @@ fun ProductItem(
                 Button(
                     onClick = onEditClick
                 ) {
+
                     Text("Edit")
                 }
 
                 Button(
                     onClick = onDeleteClick
                 ) {
+
                     Text("Hapus")
+                }
+
+                Button(
+                    onClick = onDetailClick
+                ) {
+
+                    Text("Detail")
                 }
             }
         }

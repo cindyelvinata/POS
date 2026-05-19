@@ -56,6 +56,12 @@ class ProductViewModel : ViewModel() {
     val stock: StateFlow<String> =
         _stock
 
+    private val _selectedProduct =
+        MutableStateFlow<Product?>(null)
+
+    val selectedProduct: StateFlow<Product?> =
+        _selectedProduct
+
     /*
      * Load semua products
      */
@@ -211,6 +217,14 @@ class ProductViewModel : ViewModel() {
                     )
             }
         }
+    }
+
+    fun showProductDetail(product: Product) {
+        _selectedProduct.value = product
+    }
+
+    fun closeProductDetail() {
+        _selectedProduct.value = null
     }
 
     /*
