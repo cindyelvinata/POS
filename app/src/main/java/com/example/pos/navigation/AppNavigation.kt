@@ -28,6 +28,8 @@ import com.example.pos.viewmodel.AuthUiState
 import com.example.pos.viewmodel.AuthViewModel
 import com.example.pos.viewmodel.KasViewModel
 import com.example.pos.viewmodel.ProductViewModel
+import com.example.pos.ui.theme.InventoryLogScreen
+import com.example.pos.viewmodel.InventoryLogViewModel
 
 @Composable
 fun AppNavigation(
@@ -370,7 +372,9 @@ fun MainNavHost(
 
                 onInventoryLogClick = {
 
-                    // nanti bisa diarahkan ke InventoryLogScreen
+                    navController.navigate(
+                        Screen.InventoryLog.route
+                    )
                 },
 
                 selectedProduct = selectedProduct,
@@ -391,6 +395,29 @@ fun MainNavHost(
                         }
                     }
                 }
+            )
+        }
+        /*
+ * INVENTORY LOG
+ */
+        composable(Screen.InventoryLog.route) {
+
+            val inventoryLogViewModel: InventoryLogViewModel =
+                viewModel()
+
+            val inventoryLogUiState =
+                inventoryLogViewModel
+                    .inventoryLogUiState
+                    .collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+
+                inventoryLogViewModel.loadLogs()
+            }
+
+            InventoryLogScreen(
+                inventoryLogUiState =
+                    inventoryLogUiState.value
             )
         }
     }
