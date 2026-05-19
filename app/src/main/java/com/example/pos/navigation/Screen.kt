@@ -1,9 +1,5 @@
 package com.example.pos.navigation
 
-/*
- * Sealed class juga bisa digunakan untuk route navigasi.
- * Tujuannya agar nama route tidak ditulis manual berkali-kali.
- */
 sealed class Screen(val route: String) {
 
     object Login : Screen("login")
@@ -13,4 +9,17 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
 
     object InventoryLog : Screen("inventory_log")
+
+    object Kas : Screen("kas")
+
+    object AddKas : Screen("add_kas")
+
+    object Product : Screen("product")
+
+    object DetailKas : Screen("detail_kas/{kasId}") {
+
+        fun createRoute(kasId: String): String {
+            return "detail_kas/$kasId"
+        }
+    }
 }

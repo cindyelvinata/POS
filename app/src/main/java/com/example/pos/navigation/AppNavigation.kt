@@ -17,14 +17,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pos.model.Product
-import com.example.pos.ui.theme.InventoryLogScreen
+import com.example.pos.ui.theme.DashboardScreen
 import com.example.pos.ui.theme.LoginScreen
 import com.example.pos.ui.theme.ProductScreen
 import com.example.pos.ui.theme.RegisterScreen
+import com.example.pos.ui.theme.kas.AddKasScreen
+import com.example.pos.ui.theme.kas.KasScreen
 import com.example.pos.viewmodel.AuthCheckState
 import com.example.pos.viewmodel.AuthUiState
 import com.example.pos.viewmodel.AuthViewModel
-import com.example.pos.viewmodel.InventoryLogViewModel
+import com.example.pos.viewmodel.KasViewModel
 import com.example.pos.viewmodel.ProductViewModel
 
 @Composable
@@ -33,18 +35,15 @@ fun AppNavigation(
 ) {
 
     val authCheckState =
-        authViewModel.authCheckState
-            .collectAsStateWithLifecycle()
+        authViewModel.authCheckState.collectAsStateWithLifecycle()
 
     when (authCheckState.value) {
 
         is AuthCheckState.Checking -> {
 
             Box(
-                modifier =
-                    Modifier.fillMaxSize(),
-                contentAlignment =
-                    Alignment.Center
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
 
                 CircularProgressIndicator()
@@ -54,20 +53,16 @@ fun AppNavigation(
         is AuthCheckState.Authenticated -> {
 
             MainNavHost(
-                authViewModel =
-                    authViewModel,
-                startDestination =
-                    Screen.Dashboard.route
+                authViewModel = authViewModel,
+                startDestination = Screen.Dashboard.route
             )
         }
 
         is AuthCheckState.NotAuthenticated -> {
 
             MainNavHost(
-                authViewModel =
-                    authViewModel,
-                startDestination =
-                    Screen.Login.route
+                authViewModel = authViewModel,
+                startDestination = Screen.Login.route
             )
         }
     }
@@ -79,40 +74,39 @@ fun MainNavHost(
     startDestination: String
 ) {
 
-    val navController =
-        rememberNavController()
+    val navController = rememberNavController()
+
+    val kasViewModel: KasViewModel = viewModel()
+
+    val fullName =
+        authViewModel.fullName.collectAsStateWithLifecycle()
+
+    val email =
+        authViewModel.email.collectAsStateWithLifecycle()
+
+    val password =
+        authViewModel.password.collectAsStateWithLifecycle()
+
+    val uiState =
+        authViewModel.uiState.collectAsStateWithLifecycle()
+
+    val userRole =
+        authViewModel.userRole.collectAsStateWithLifecycle()
+
+    val isAdmin =
+        userRole.value == "admin"
 
     var selectedProduct by remember {
         mutableStateOf<Product?>(null)
     }
 
-    val fullName =
-        authViewModel.fullName
-            .collectAsStateWithLifecycle()
-
-    val email =
-        authViewModel.email
-            .collectAsStateWithLifecycle()
-
-    val password =
-        authViewModel.password
-            .collectAsStateWithLifecycle()
-
-    val uiState =
-        authViewModel.uiState
-            .collectAsStateWithLifecycle()
-
     LaunchedEffect(uiState.value) {
 
         if (uiState.value is AuthUiState.Success) {
 
-            navController.navigate(
-                Screen.Dashboard.route
-            ) {
+            navController.navigate(Screen.Dashboard.route) {
 
-                popUpTo(
-                    Screen.Login.route
-                ) {
+                popUpTo(Screen.Login.route) {
                     inclusive = true
                 }
             }
@@ -123,8 +117,7 @@ fun MainNavHost(
 
     NavHost(
         navController = navController,
-        startDestination =
-            startDestination
+        startDestination = startDestination
     ) {
 
         /*
@@ -135,9 +128,7 @@ fun MainNavHost(
             LoginScreen(
 
                 email = email.value,
-
                 password = password.value,
-
                 uiState = uiState.value,
 
                 onEmailChange =
@@ -153,9 +144,7 @@ fun MainNavHost(
 
                 onNavigateToRegister = {
 
-                    navController.navigate(
-                        Screen.Register.route
-                    )
+                    navController.navigate(Screen.Register.route)
                 }
             )
         }
@@ -168,11 +157,8 @@ fun MainNavHost(
             RegisterScreen(
 
                 fullName = fullName.value,
-
                 email = email.value,
-
                 password = password.value,
-
                 uiState = uiState.value,
 
                 onFullNameChange =
@@ -197,17 +183,122 @@ fun MainNavHost(
         }
 
         /*
-         * PRODUCT
+         * DASHBOARD
          */
         composable(Screen.Dashboard.route) {
 
-            val productViewModel:
-                    ProductViewModel =
-                viewModel()
+            DashboardScreen(
+
+                isAdmin = isAdmin,
+
+                kasViewModel = kasViewModel,
+
+                onLogoutClick = {
+
+                    authViewModel.logout()
+
+                    navController.navigate(Screen.Login.route) {
+
+                        popUpTo(Screen.Dashboard.route) {
+                            inclusive = true
+                        }
+                    }
+                },
+
+                onNavigateToKas = {
+
+                    navController.navigate(Screen.Kas.route)
+                },
+
+                onNavigateToProduct = {
+
+                    navController.navigate(Screen.Product.route)
+                }
+            )
+        }
+
+        /*
+         * LIST KAS
+         */
+        composable(Screen.Kas.route) {
+
+            KasScreen(
+
+                isAdmin = isAdmin,
+
+                kasViewModel = kasViewModel,
+
+                onNavigateBack = {
+
+                    navController.popBackStack()
+                },
+
+                onNavigateToAddKas = {
+
+                    navController.navigate(Screen.AddKas.route)
+                },
+
+                onNavigateToDetailKas = { kasId ->
+
+                    navController.navigate(
+                        Screen.DetailKas.createRoute(kasId)
+                    )
+                }
+            )
+        }
+
+        /*
+         * TAMBAH KAS
+         */
+        composable(Screen.AddKas.route) {
+
+            AddKasScreen(
+
+                cashAccountId = null,
+
+                isAdmin = isAdmin,
+
+                kasViewModel = kasViewModel,
+
+                onNavigateBack = {
+
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        /*
+         * DETAIL KAS
+         */
+        composable(Screen.DetailKas.route) { backStackEntry ->
+
+            val kasId =
+                backStackEntry.arguments?.getString("kasId")
+
+            AddKasScreen(
+
+                cashAccountId = kasId,
+
+                isAdmin = isAdmin,
+
+                kasViewModel = kasViewModel,
+
+                onNavigateBack = {
+
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        /*
+         * PRODUCT
+         */
+        composable(Screen.Product.route) {
+
+            val productViewModel: ProductViewModel = viewModel()
 
             val productUiState =
-                productViewModel
-                    .productUiState
+                productViewModel.productUiState
                     .collectAsStateWithLifecycle()
 
             val name =
@@ -239,11 +330,9 @@ fun MainNavHost(
 
                 stock = stock.value,
 
-                isEditMode =
-                    isEditMode.value,
+                isEditMode = isEditMode.value,
 
-                productUiState =
-                    productUiState.value,
+                productUiState = productUiState.value,
 
                 onNameChange =
                     productViewModel::onNameChange,
@@ -271,8 +360,7 @@ fun MainNavHost(
 
                 onDeleteClick = { product ->
 
-                    productViewModel
-                        .deleteProduct(product.id)
+                    productViewModel.deleteProduct(product.id)
                 },
 
                 onDetailClick = { product ->
@@ -282,61 +370,27 @@ fun MainNavHost(
 
                 onInventoryLogClick = {
 
-                    navController.navigate(
-                        Screen.InventoryLog.route
-                    )
+                    // nanti bisa diarahkan ke InventoryLogScreen
+                },
+
+                selectedProduct = selectedProduct,
+
+                onDismissDetail = {
+
+                    selectedProduct = null
                 },
 
                 onLogoutClick = {
 
                     authViewModel.logout()
 
-                    navController.navigate(
-                        Screen.Login.route
-                    ) {
+                    navController.navigate(Screen.Login.route) {
 
-                        popUpTo(
-                            Screen.Dashboard.route
-                        ) {
+                        popUpTo(Screen.Dashboard.route) {
                             inclusive = true
                         }
                     }
-                },
-
-                selectedProduct =
-                    selectedProduct,
-
-                onDismissDetail = {
-
-                    selectedProduct = null
                 }
-            )
-        }
-
-        /*
-         * INVENTORY LOG
-         */
-        composable(
-            Screen.InventoryLog.route
-        ) {
-
-            val inventoryLogViewModel:
-                    InventoryLogViewModel =
-                viewModel()
-
-            val inventoryLogUiState =
-                inventoryLogViewModel
-                    .inventoryLogUiState
-                    .collectAsStateWithLifecycle()
-
-            LaunchedEffect(Unit) {
-
-                inventoryLogViewModel.loadLogs()
-            }
-
-            InventoryLogScreen(
-                inventoryLogUiState =
-                    inventoryLogUiState.value
             )
         }
     }

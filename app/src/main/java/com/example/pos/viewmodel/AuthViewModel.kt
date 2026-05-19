@@ -10,70 +10,62 @@ import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
 
-    /*
-     * Repository untuk akses Supabase.
-     */
     private val repository = AuthRepository()
 
-    /*
-     * State UI.
-     */
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState
 
-    /*
-     * State pengecekan login.
-     */
     private val _authCheckState =
         MutableStateFlow<AuthCheckState>(AuthCheckState.Checking)
-
     val authCheckState: StateFlow<AuthCheckState> = _authCheckState
 
-    /*
-     * State Full Name.
-     */
     private val _fullName = MutableStateFlow("")
     val fullName: StateFlow<String> = _fullName
 
-    /*
-     * State Email.
-     */
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email
 
-    /*
-     * State Password.
-     */
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password
+
+    /*
+     * Role user: "admin" atau "cashier".
+     * Default "cashier" → prinsip least privilege:
+     * jika fetch gagal, akses dibatasi ke minimum.
+     */
+    private val _userRole = MutableStateFlow("cashier")
+    val userRole: StateFlow<String> = _userRole
 
     init {
         observeAuthStatus()
     }
 
     /*
-     * Observe auth status realtime.
+     * Observe perubahan session secara realtime.
+     * Saat Authenticated → langsung fetch role dari tabel profiles.
+     * Saat NotAuthenticated → reset role ke default "cashier".
      */
     private fun observeAuthStatus() {
-
         viewModelScope.launch {
-
             repository.sessionStatus.collect { status ->
-
                 _authCheckState.value = when (status) {
 
-                    is SessionStatus.Authenticated ->
+                    is SessionStatus.Authenticated -> {
+                        fetchUserRole()
                         AuthCheckState.Authenticated
+                    }
 
-                    is SessionStatus.NotAuthenticated ->
+                    is SessionStatus.NotAuthenticated -> {
+                        _userRole.value = "cashier"
                         AuthCheckState.NotAuthenticated
+                    }
 
                     is SessionStatus.Initializing ->
                         AuthCheckState.Checking
 
                     is SessionStatus.RefreshFailure -> {
-
                         if (repository.isLoggedIn()) {
+                            fetchUserRole()
                             AuthCheckState.Authenticated
                         } else {
                             AuthCheckState.NotAuthenticated
@@ -85,97 +77,65 @@ class AuthViewModel : ViewModel() {
     }
 
     /*
-     * Update full name.
+     * Fetch role dari tabel profiles.
+     * Dipanggil saat session aktif (login baru atau restore session).
      */
-    fun onFullNameChange(value: String) {
-        _fullName.value = value
-    }
-
-    /*
-     * Update email.
-     */
-    fun onEmailChange(value: String) {
-        _email.value = value
-    }
-
-    /*
-     * Update password.
-     */
-    fun onPasswordChange(value: String) {
-        _password.value = value
-    }
-
-    /*
-     * Login.
-     */
-    fun login() {
-
+    private fun fetchUserRole() {
         viewModelScope.launch {
-
             try {
-
-                _uiState.value = AuthUiState.Loading
-
-                repository.login(
-                    email = _email.value,
-                    password = _password.value
-                )
-
-                _uiState.value = AuthUiState.Success
-
+                val profile = repository.getProfile()
+                _userRole.value = profile?.role ?: "cashier"
             } catch (e: Exception) {
-
-                _uiState.value = AuthUiState.Error(
-                    message = e.message ?: "Login gagal"
-                )
+                // Jika gagal, default ke cashier (aman)
+                _userRole.value = "cashier"
             }
         }
     }
 
-    /*
-     * Register.
-     */
-    fun register() {
+    fun onFullNameChange(value: String) { _fullName.value = value }
+    fun onEmailChange(value: String) { _email.value = value }
+    fun onPasswordChange(value: String) { _password.value = value }
 
+    fun login() {
         viewModelScope.launch {
-
             try {
-
                 _uiState.value = AuthUiState.Loading
+                repository.login(
+                    email = _email.value,
+                    password = _password.value
+                )
+                // fetchUserRole() otomatis dipanggil lewat observeAuthStatus
+                _uiState.value = AuthUiState.Success
+            } catch (e: Exception) {
+                _uiState.value = AuthUiState.Error(e.message ?: "Login gagal")
+            }
+        }
+    }
 
+    fun register() {
+        viewModelScope.launch {
+            try {
+                _uiState.value = AuthUiState.Loading
                 repository.register(
                     fullName = _fullName.value,
                     email = _email.value,
                     password = _password.value
                 )
-
                 _uiState.value = AuthUiState.Success
-
             } catch (e: Exception) {
-
-                _uiState.value = AuthUiState.Error(
-                    message = e.message ?: "Register gagal"
-                )
+                _uiState.value = AuthUiState.Error(e.message ?: "Register gagal")
             }
         }
     }
 
-    /*
-     * Logout.
-     */
     fun logout() {
-
         viewModelScope.launch {
-
             repository.logout()
-
+            _userRole.value = "cashier"
             _uiState.value = AuthUiState.Idle
         }
     }
 
-    /*
-     * Reset UI State.
-     */
     fun resetState() {
         _uiState.value = AuthUiState.Idle
     }
