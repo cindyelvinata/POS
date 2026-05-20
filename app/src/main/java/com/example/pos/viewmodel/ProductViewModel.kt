@@ -56,6 +56,9 @@ class ProductViewModel : ViewModel() {
     val stock: StateFlow<String> =
         _stock
 
+    /*
+     * Detail produk
+     */
     private val _selectedProduct =
         MutableStateFlow<Product?>(null)
 
@@ -96,14 +99,17 @@ class ProductViewModel : ViewModel() {
      * Update input
      */
     fun onNameChange(value: String) {
+
         _name.value = value
     }
 
     fun onPriceChange(value: String) {
+
         _price.value = value
     }
 
     fun onStockChange(value: String) {
+
         _stock.value = value
     }
 
@@ -117,7 +123,9 @@ class ProductViewModel : ViewModel() {
         _isEditMode.value = true
 
         _name.value = product.name
+
         _price.value = product.price.toString()
+
         _stock.value = product.stock.toString()
     }
 
@@ -131,9 +139,14 @@ class ProductViewModel : ViewModel() {
             try {
 
                 repository.addProduct(
+
                     name = _name.value,
-                    price = _price.value.toDoubleOrNull() ?: 0.0,
-                    stock = _stock.value.toDoubleOrNull() ?: 0.0
+
+                    price =
+                        _price.value.toDoubleOrNull() ?: 0.0,
+
+                    stock =
+                        _stock.value.toDoubleOrNull() ?: 0.0
                 )
 
                 clearForm()
@@ -167,10 +180,17 @@ class ProductViewModel : ViewModel() {
             try {
 
                 repository.updateProduct(
+
                     id = productId,
+
                     name = _name.value,
-                    price = _price.value.toDoubleOrNull() ?: 0.0,
-                    stock = _stock.value.toDoubleOrNull() ?: 0.0,
+
+                    price =
+                        _price.value.toDoubleOrNull() ?: 0.0,
+
+                    stock =
+                        _stock.value.toDoubleOrNull() ?: 0.0,
+
                     isActive = true
                 )
 
@@ -219,12 +239,29 @@ class ProductViewModel : ViewModel() {
         }
     }
 
+    /*
+     * Detail produk
+     */
     fun showProductDetail(product: Product) {
+
         _selectedProduct.value = product
     }
 
     fun closeProductDetail() {
+
         _selectedProduct.value = null
+    }
+
+    /*
+     * Batal edit
+     */
+    fun cancelEdit() {
+
+        selectedProductId = null
+
+        _isEditMode.value = false
+
+        clearForm()
     }
 
     /*
@@ -233,7 +270,9 @@ class ProductViewModel : ViewModel() {
     private fun clearForm() {
 
         _name.value = ""
+
         _price.value = ""
+
         _stock.value = ""
     }
 }

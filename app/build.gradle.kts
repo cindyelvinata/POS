@@ -66,6 +66,8 @@ dependencies {
 
     implementation("io.ktor:ktor-client-android:3.0.3")
 
+    implementation("androidx.compose.material:material-icons-extended")
+
     // Navigation Compose
     implementation("androidx.navigation:navigation-compose:2.8.9")
     // ViewModel Compose

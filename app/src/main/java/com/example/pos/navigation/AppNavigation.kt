@@ -355,6 +355,11 @@ fun MainNavHost(
                     productViewModel.updateProduct()
                 },
 
+                onCancelEdit = {
+
+                    productViewModel.cancelEdit()
+                },
+
                 onEditClick = { product ->
 
                     productViewModel.fillForm(product)
@@ -417,7 +422,19 @@ fun MainNavHost(
 
             InventoryLogScreen(
                 inventoryLogUiState =
-                    inventoryLogUiState.value
+                    inventoryLogUiState.value,
+
+                onBackToProduct = {
+
+                    navController.navigate(Screen.Product.route) {
+
+                        popUpTo(Screen.Product.route) {
+                            inclusive = false
+                        }
+
+                        launchSingleTop = true
+                    }
+                }
             )
         }
     }
