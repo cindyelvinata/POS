@@ -1,6 +1,7 @@
 package com.example.pos.ui.theme
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,7 +22,6 @@ import com.example.pos.data.model.CashLog
 import com.example.pos.ui.theme.kas.formatDate
 import com.example.pos.ui.theme.kas.formatRupiah
 import com.example.pos.viewmodel.KasViewModel
-import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,18 +32,13 @@ fun DashboardScreen(
     kasViewModel: KasViewModel = viewModel(),
     onNavigateToProduct: () -> Unit = {},
 ) {
-
-    // ================================
-    // STATE DASHBOARD
-    // ================================
     val totalBalance by kasViewModel.totalBalance.collectAsStateWithLifecycle()
     val todaySalesTotal by kasViewModel.todaySalesTotal.collectAsStateWithLifecycle()
     val recentLogs by kasViewModel.recentLogs.collectAsStateWithLifecycle()
     val isLoading by kasViewModel.isLoadingDashboard.collectAsStateWithLifecycle()
+    val totalExpenses by kasViewModel.totalExpenses.collectAsStateWithLifecycle()
+    val totalProducts by kasViewModel.totalProducts.collectAsStateWithLifecycle()
 
-    // ================================
-    // LOAD DATA AWAL
-    // ================================
     LaunchedEffect(Unit) {
         kasViewModel.loadDashboardData()
     }
@@ -52,14 +47,33 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Dashboard",
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Dashboard",
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        if (isAdmin) {
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        Color.White.copy(alpha = 0.25f),
+                                        RoundedCornerShape(20.dp)
+                                    )
+                                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "Admin",
+                                    color = Color.White,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 },
                 actions = {
-
-                    // Tombol logout lama tetap dipertahankan
                     IconButton(onClick = onLogoutClick) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,
@@ -75,12 +89,7 @@ fun DashboardScreen(
             )
         }
     ) { paddingValues ->
-
-        // ================================
-        // LOADING
-        // ================================
         if (isLoading) {
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -89,12 +98,7 @@ fun DashboardScreen(
             ) {
                 CircularProgressIndicator()
             }
-
         } else {
-
-            // ================================
-            // CONTENT DASHBOARD
-            // ================================
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -102,109 +106,112 @@ fun DashboardScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
-                // ================================
-                // RINGKASAN
-                // ================================
                 item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        DashboardSummaryCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "💵",
+                            label = "Total Saldo Kas",
+                            value = formatRupiah(totalBalance),
+                            backgroundColor = MaterialTheme.colorScheme.primary
+                        )
+                        DashboardSummaryCard(
+                            modifier = Modifier.weight(1f),
+                            emoji = "🛒",
+                            label = "Penjualan Hari Ini",
+                            value = formatRupiah(todaySalesTotal),
+                            backgroundColor = Color(0xFF26A69A)
+                        )
+                    }
 
-                    Text(
-                        text = "Ringkasan",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-
-                        // Total saldo kas
-                        SummaryCard(
+                        DashboardSummaryCard(
                             modifier = Modifier.weight(1f),
-                            title = "Total Saldo Kas",
-                            value = formatRupiah(totalBalance),
-                            backgroundColor = MaterialTheme.colorScheme.primary,
-                            emoji = "💰"
+                            emoji = "📉",
+                            label = "Pengeluaran",
+                            value = formatRupiah(totalExpenses),
+                            backgroundColor = Color(0xFFEF5350)
                         )
-
-                        // Penjualan hari ini
-                        SummaryCard(
+                        DashboardSummaryCard(
                             modifier = Modifier.weight(1f),
-                            title = "Penjualan Hari Ini",
-                            value = formatRupiah(todaySalesTotal),
-                            backgroundColor = Color(0xFF4CAF50),
-                            emoji = "🛒"
+                            emoji = "📦",
+                            label = "Total Produk",
+                            value = totalProducts.toString(),
+                            backgroundColor = Color(0xFFF57C00)
                         )
                     }
                 }
 
-                // ================================
-                // BUTTON KE HALAMAN KAS
-                // ================================
                 item {
-
                     OutlinedButton(
                         onClick = onNavigateToKas,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("💼 Kelola Kas →")
-                    }
-                }
-
-                item {
-
-                    OutlinedButton(
-                        onClick = onNavigateToProduct,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-
-                        Text("📦 Kelola Produk →")
-                    }
-                }
-
-                // ================================
-                // JUDUL TRANSAKSI
-                // ================================
-                item {
-
-                    Text(
-                        text = "Transaksi Kas Terbaru",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
-                }
-
-                // ================================
-                // EMPTY STATE
-                // ================================
-                if (recentLogs.isEmpty()) {
-
-                    item {
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 24.dp),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-
                             Text(
-                                text = "Belum ada transaksi kas",
-                                color = Color.Gray
+                                text = "Manajemen Kas",
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "›",
+                                fontSize = 20.sp,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
+                }
 
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Transaksi Terbaru",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = "Lihat Semua",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.clickable { onNavigateToKas() }
+                        )
+                    }
+                }
+
+                if (recentLogs.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Belum ada transaksi kas", color = Color.Gray)
+                        }
+                    }
                 } else {
-
-                    // ================================
-                    // LIST LOG KAS
-                    // ================================
                     items(recentLogs) { log ->
-
                         DashboardLogItem(log = log)
                     }
                 }
@@ -213,9 +220,45 @@ fun DashboardScreen(
     }
 }
 
-/* =========================================================
- * SUMMARY CARD
- * ========================================================= */
+@Composable
+fun DashboardSummaryCard(
+    modifier: Modifier = Modifier,
+    emoji: String,
+    label: String,
+    value: String,
+    backgroundColor: Color
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Text(text = emoji, fontSize = 22.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = label,
+                color = Color.White.copy(alpha = 0.85f),
+                fontSize = 11.sp,
+                lineHeight = 14.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.sp,
+                maxLines = 1
+            )
+        }
+    }
+}
+
 @Composable
 fun SummaryCard(
     modifier: Modifier = Modifier,
@@ -224,106 +267,61 @@ fun SummaryCard(
     backgroundColor: Color,
     emoji: String
 ) {
-
-    Card(
+    DashboardSummaryCard(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = backgroundColor
-        )
-    ) {
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
-        ) {
-
-            Text(
-                text = emoji,
-                fontSize = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = title,
-                color = Color.White.copy(alpha = 0.85f),
-                fontSize = 12.sp
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = value,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 15.sp
-            )
-        }
-    }
+        emoji = emoji,
+        label = title,
+        value = value,
+        backgroundColor = backgroundColor
+    )
 }
 
-/* =========================================================
- * ITEM TRANSAKSI DASHBOARD
- * ========================================================= */
 @Composable
-fun DashboardLogItem(
-    log: CashLog
-) {
-
+fun DashboardLogItem(log: CashLog) {
     val isIn = log.type == "in"
-
-    val typeColor =
-        if (isIn) Color(0xFF4CAF50)
-        else Color(0xFFF44336)
-
-    val sign =
-        if (isIn) "+"
-        else "-"
+    val typeColor = if (isIn) Color(0xFF4CAF50) else Color(0xFFF44336)
+    val sign = if (isIn) "+" else "-"
+    val typeLabel = if (isIn) "Masuk · " else "Keluar · "
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(
                 MaterialTheme.colorScheme.surface,
-                RoundedCornerShape(8.dp)
+                RoundedCornerShape(10.dp)
             )
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-
-        // ICON TYPE
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .background(
-                    typeColor.copy(alpha = 0.15f),
-                    RoundedCornerShape(8.dp)
-                ),
+                .size(38.dp)
+                .background(typeColor.copy(alpha = 0.12f), RoundedCornerShape(10.dp)),
             contentAlignment = Alignment.Center
         ) {
-
             Text(
                 text = if (isIn) "↑" else "↓",
                 color = typeColor,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
             )
         }
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        // INFO
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-
+        Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = log.notes ?: log.source,
+                text = typeLabel + log.source,
+                color = typeColor,
                 fontWeight = FontWeight.Medium,
-                fontSize = 13.sp
+                fontSize = 12.sp
             )
-
+            Text(
+                text = log.notes ?: "-",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                maxLines = 1
+            )
             Text(
                 text = formatDate(log.createdAt),
                 color = Color.Gray,
@@ -331,12 +329,11 @@ fun DashboardLogItem(
             )
         }
 
-        // NOMINAL
         Text(
             text = "$sign ${formatRupiah(log.amount)}",
             color = typeColor,
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp
+            fontSize = 13.sp
         )
     }
 }

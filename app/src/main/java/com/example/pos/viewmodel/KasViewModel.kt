@@ -10,9 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/* =============================================
- * UI STATE untuk operasi Kas
- * ============================================= */
+/*** UI STATE untuk operasi Kas */
 sealed class KasUiState {
     object Idle : KasUiState()
     object Loading : KasUiState()
@@ -24,27 +22,21 @@ class KasViewModel : ViewModel() {
 
     private val repository = KasRepository()
 
-    /* =============================================
-     * STATE: Daftar Kas
-     * ============================================= */
+/*** STATE: Daftar Kas */
     private val _cashAccounts = MutableStateFlow<List<CashAccount>>(emptyList())
     val cashAccounts: StateFlow<List<CashAccount>> = _cashAccounts.asStateFlow()
 
     private val _isLoadingAccounts = MutableStateFlow(false)
     val isLoadingAccounts: StateFlow<Boolean> = _isLoadingAccounts.asStateFlow()
 
-    /* =============================================
-     * STATE: Log Kas (untuk detail per kas)
-     * ============================================= */
+    /*** STATE: Log Kas (untuk detail per kas) */
     private val _cashLogs = MutableStateFlow<List<CashLog>>(emptyList())
     val cashLogs: StateFlow<List<CashLog>> = _cashLogs.asStateFlow()
 
     private val _isLoadingLogs = MutableStateFlow(false)
     val isLoadingLogs: StateFlow<Boolean> = _isLoadingLogs.asStateFlow()
 
-    /* =============================================
-     * STATE: Dashboard
-     * ============================================= */
+    /*** STATE: Dashboard */
     private val _totalBalance = MutableStateFlow(0.0)
     val totalBalance: StateFlow<Double> = _totalBalance.asStateFlow()
 
@@ -54,12 +46,24 @@ class KasViewModel : ViewModel() {
     private val _recentLogs = MutableStateFlow<List<CashLog>>(emptyList())
     val recentLogs: StateFlow<List<CashLog>> = _recentLogs.asStateFlow()
 
+    /**
+     * Total pengeluaran (expenses) — ditampilkan di card Dashboard.
+     * Diisi oleh KasRepository.getTotalExpenses() dari tabel expenses.
+     */
+    private val _totalExpenses = MutableStateFlow(0.0)
+    val totalExpenses: StateFlow<Double> = _totalExpenses.asStateFlow()
+
+    /**
+     * Total jumlah produk aktif — ditampilkan di card Dashboard.
+     * Diisi oleh KasRepository.getTotalActiveProducts() dari tabel products.
+     */
+    private val _totalProducts = MutableStateFlow(0)
+    val totalProducts: StateFlow<Int> = _totalProducts.asStateFlow()
+
     private val _isLoadingDashboard = MutableStateFlow(false)
     val isLoadingDashboard: StateFlow<Boolean> = _isLoadingDashboard.asStateFlow()
 
-    /* =============================================
-     * STATE: Form Input
-     * ============================================= */
+    /*** STATE: Form Input */
     private val _kasName = MutableStateFlow("")
     val kasName: StateFlow<String> = _kasName.asStateFlow()
 
@@ -72,15 +76,11 @@ class KasViewModel : ViewModel() {
     private val _transactionNotes = MutableStateFlow("")
     val transactionNotes: StateFlow<String> = _transactionNotes.asStateFlow()
 
-    /* =============================================
-     * STATE: UI Operation Result
-     * ============================================= */
+    /*** STATE: UI Operation Result */
     private val _uiState = MutableStateFlow<KasUiState>(KasUiState.Idle)
     val uiState: StateFlow<KasUiState> = _uiState.asStateFlow()
 
-    /* =============================================
-     * FORM INPUT HANDLERS
-     * ============================================= */
+    /*** FORM INPUT HANDLERs */
     fun onKasNameChange(value: String) { _kasName.value = value }
     fun onInitialBalanceChange(value: String) { _initialBalance.value = value }
     fun onTransactionAmountChange(value: String) { _transactionAmount.value = value }
@@ -97,9 +97,7 @@ class KasViewModel : ViewModel() {
         _uiState.value = KasUiState.Idle
     }
 
-    /* =============================================
-     * LOAD DATA
-     * ============================================= */
+/*** LOAD DATA */
 
     /**
      * Muat semua kas (aktif + non-aktif) untuk KasScreen.
@@ -134,15 +132,22 @@ class KasViewModel : ViewModel() {
     }
 
     /**
-     * Muat semua data yang dibutuhkan Dashboard.
+     * Muat semua data yang dibutuhkan Dashboard:
+     * - Total saldo kas aktif
+     * - Total penjualan hari ini
+     * - Log transaksi terbaru
+     * - Total pengeluaran (bulan ini atau keseluruhan — sesuaikan di repository)
+     * - Total produk aktif
      */
     fun loadDashboardData() {
         viewModelScope.launch {
             _isLoadingDashboard.value = true
             try {
-                _totalBalance.value = repository.getTotalActiveBalance()
+                _totalBalance.value    = repository.getTotalActiveBalance()
                 _todaySalesTotal.value = repository.getTodaySalesTotal()
-                _recentLogs.value = repository.getRecentCashLogs()
+                _recentLogs.value      = repository.getRecentCashLogs()
+                _totalExpenses.value   = repository.getTotalExpenses()
+                _totalProducts.value   = repository.getTotalActiveProducts()
             } catch (e: Exception) {
                 _uiState.value = KasUiState.Error(e.message ?: "Gagal memuat data dashboard")
             } finally {
@@ -151,15 +156,13 @@ class KasViewModel : ViewModel() {
         }
     }
 
-    /* =============================================
-     * CRUD OPERASI
-     * ============================================= */
+    /*** CRUD OPERASI */
 
     /**
      * Buat kas baru dengan nama dan saldo awal.
      */
     fun createCashAccount() {
-        val name = _kasName.value.trim()
+        val name    = _kasName.value.trim()
         val balance = _initialBalance.value.trim().toDoubleOrNull()
 
         if (name.isEmpty()) {
@@ -229,7 +232,7 @@ class KasViewModel : ViewModel() {
      */
     fun addBalance(cashAccount: CashAccount) {
         val amount = _transactionAmount.value.trim().toDoubleOrNull()
-        val notes = _transactionNotes.value.trim()
+        val notes  = _transactionNotes.value.trim()
 
         if (amount == null || amount <= 0) {
             _uiState.value = KasUiState.Error("Nominal tidak valid")
@@ -240,10 +243,10 @@ class KasViewModel : ViewModel() {
             _uiState.value = KasUiState.Loading
             try {
                 repository.addBalance(
-                    cashAccountId = cashAccount.id,
-                    currentBalance = cashAccount.currentBalance,
-                    amount = amount,
-                    notes = notes.ifEmpty { "Tambah saldo manual" }
+                    cashAccountId   = cashAccount.id,
+                    currentBalance  = cashAccount.currentBalance,
+                    amount          = amount,
+                    notes           = notes.ifEmpty { "Tambah saldo manual" }
                 )
                 resetForm()
                 loadCashAccounts()
@@ -260,7 +263,7 @@ class KasViewModel : ViewModel() {
      */
     fun subtractBalance(cashAccount: CashAccount) {
         val amount = _transactionAmount.value.trim().toDoubleOrNull()
-        val notes = _transactionNotes.value.trim()
+        val notes  = _transactionNotes.value.trim()
 
         if (amount == null || amount <= 0) {
             _uiState.value = KasUiState.Error("Nominal tidak valid")
@@ -271,10 +274,10 @@ class KasViewModel : ViewModel() {
             _uiState.value = KasUiState.Loading
             try {
                 repository.subtractBalance(
-                    cashAccountId = cashAccount.id,
-                    currentBalance = cashAccount.currentBalance,
-                    amount = amount,
-                    notes = notes.ifEmpty { "Kurang saldo manual" }
+                    cashAccountId   = cashAccount.id,
+                    currentBalance  = cashAccount.currentBalance,
+                    amount          = amount,
+                    notes           = notes.ifEmpty { "Kurang saldo manual" }
                 )
                 resetForm()
                 loadCashAccounts()

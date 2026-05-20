@@ -250,4 +250,46 @@ class KasRepository {
             0.0
         }
     }
+
+    /**
+     * Ambil total seluruh pengeluaran yang tidak dibatalkan.
+     * SUM(amount) dari tabel expenses.
+     */
+    suspend fun getTotalExpenses(): Double {
+        return try {
+            val result = client.postgrest["expenses"]
+                .select {
+                    filter {
+                        eq("is_cancelled", false)
+                    }
+                }
+                .decodeList<kotlinx.serialization.json.JsonObject>()
+
+            result.sumOf { obj ->
+                obj["amount"]?.toString()?.toDoubleOrNull() ?: 0.0
+            }
+        } catch (e: Exception) {
+            0.0
+        }
+    }
+
+    /**
+     * Hitung jumlah produk aktif.
+     * COUNT product dengan is_active = true.
+     */
+    suspend fun getTotalActiveProducts(): Int {
+        return try {
+            val result = client.postgrest["products"]
+                .select {
+                    filter {
+                        eq("is_active", true)
+                    }
+                }
+                .decodeList<kotlinx.serialization.json.JsonObject>()
+
+            result.size
+        } catch (e: Exception) {
+            0
+        }
+    }
 }

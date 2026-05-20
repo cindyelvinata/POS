@@ -1,7 +1,6 @@
 package com.example.pos.ui.theme
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,171 +16,80 @@ import androidx.compose.ui.unit.sp
 import com.example.pos.model.InventoryLog
 import com.example.pos.viewmodel.InventoryLogUiState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InventoryLogScreen(
-
     inventoryLogUiState: InventoryLogUiState,
-
     onBackToProduct: () -> Unit
 ) {
-
     Scaffold(
-
         topBar = {
-
-            TopBar(
-                onLogoutClick = {
-
-                }
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Produk",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = Color.White
+                )
             )
-        },
-
-        bottomBar = {
-
-            BottomBar()
         }
-
     ) { paddingValues ->
-
         Column(
-
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
+                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
-
-            InventoryTabs(
-                onBackToProduct = onBackToProduct
-            )
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
+            ProductSectionTabs(
+                selectedTabIndex = 1,
+                onProductClick = onBackToProduct,
+                onInventoryLogClick = {}
             )
 
             when (inventoryLogUiState) {
-
                 is InventoryLogUiState.Loading -> {
-
                     Box(
-
-                        modifier =
-                            Modifier.fillMaxSize(),
-
-                        contentAlignment =
-                            Alignment.Center
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-
                         CircularProgressIndicator()
                     }
                 }
 
                 is InventoryLogUiState.Error -> {
-
-                    Text(
-
-                        text = inventoryLogUiState.message,
-
-                        color = Color.Red,
-
-                        modifier =
-                            Modifier.padding(16.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = inventoryLogUiState.message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
 
                 is InventoryLogUiState.Success -> {
-
                     LazyColumn(
-
-                        modifier =
-                            Modifier.padding(horizontal = 16.dp),
-
-                        verticalArrangement =
-                            Arrangement.spacedBy(16.dp)
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-
                         items(inventoryLogUiState.logs) { log ->
-
                             InventoryLogItem(log)
                         }
 
                         item {
-
-                            Spacer(
-                                modifier =
-                                    Modifier.height(20.dp)
-                            )
+                            Spacer(modifier = Modifier.height(20.dp))
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun InventoryTabs(
-    onBackToProduct: () -> Unit
-) {
-
-    Row(
-
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White)
-    ) {
-
-        Column(
-
-            modifier = Modifier
-                .weight(1f)
-                .clickable {
-                    onBackToProduct()
-                }
-                .padding(vertical = 16.dp),
-
-            horizontalAlignment =
-                Alignment.CenterHorizontally
-        ) {
-
-            Text(
-
-                text = "Daftar Produk",
-
-                color = Color.Gray
-            )
-        }
-
-        Column(
-
-            modifier = Modifier
-                .weight(1f)
-                .padding(vertical = 16.dp),
-
-            horizontalAlignment =
-                Alignment.CenterHorizontally
-        ) {
-
-            Text(
-
-                text = "Inventory Log",
-
-                color = Color(0xFF005BFF),
-
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            Box(
-
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(3.dp)
-                    .background(Color(0xFF005BFF))
-            )
         }
     }
 }
@@ -190,137 +98,61 @@ fun InventoryTabs(
 fun InventoryLogItem(
     log: InventoryLog
 ) {
-
     Card(
-
         modifier = Modifier.fillMaxWidth(),
-
         shape = RoundedCornerShape(22.dp),
-
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        )
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-
-        Column(
-
-            modifier =
-                Modifier.padding(20.dp)
-        ) {
-
+        Column(modifier = Modifier.padding(20.dp)) {
             Row(
-
-                modifier =
-                    Modifier.fillMaxWidth(),
-
-                horizontalArrangement =
-                    Arrangement.SpaceBetween,
-
-                verticalAlignment =
-                    Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Text(
-
                     text = log.productName,
-
                     fontSize = 24.sp,
-
                     fontWeight = FontWeight.Bold
                 )
 
-                Box(
+                val isOut = log.type == "OUT" || log.type.lowercase() == "terjual"
 
+                Box(
                     modifier = Modifier
                         .background(
-                            color =
-                                if (
-                                    log.type == "OUT" ||
-                                    log.type.lowercase() == "terjual"
-                                ) {
-                                    Color(0xFFFFE5E5)
-                                } else {
-                                    Color(0xFFE5FFF0)
-                                },
-
-                            shape =
-                                RoundedCornerShape(12.dp)
+                            color = if (isOut) Color(0xFFFFE5E5) else Color(0xFFE5FFF0),
+                            shape = RoundedCornerShape(12.dp)
                         )
-                        .padding(
-                            horizontal = 14.dp,
-                            vertical = 6.dp
-                        )
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
-
                     Text(
-
-                        text =
-                            if (
-                                log.type == "OUT" ||
-                                log.type.lowercase() == "terjual"
-                            ) {
-                                "TERJUAL"
-                            } else {
-                                "MASUK"
-                            },
-
-                        color =
-                            if (
-                                log.type == "OUT" ||
-                                log.type.lowercase() == "terjual"
-                            ) {
-                                Color.Red
-                            } else {
-                                Color(0xFF00A651)
-                            },
-
+                        text = if (isOut) "TERJUAL" else "MASUK",
+                        color = if (isOut) Color.Red else Color(0xFF00A651),
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
+            Spacer(modifier = Modifier.height(18.dp))
 
-            InventoryInfoRow(
-                title = "Jumlah",
-                value = "${log.quantity}"
-            )
+            InventoryInfoRow("Jumlah", "${log.quantity}")
+            InventoryInfoRow("Stock Sebelum", "${log.stockBefore}")
+            InventoryInfoRow("Stock Sesudah", "${log.stockAfter}")
 
-            InventoryInfoRow(
-                title = "Stock Sebelum",
-                value = "${log.stockBefore}"
-            )
-
-            InventoryInfoRow(
-                title = "Stock Sesudah",
-                value = "${log.stockAfter}"
-            )
-
-            Spacer(
-                modifier = Modifier.height(14.dp)
-            )
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-
                 text = log.description,
-
                 fontSize = 16.sp,
-
                 color = Color.DarkGray
             )
 
-            Spacer(
-                modifier = Modifier.height(14.dp)
-            )
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-
                 text = log.createdAt,
-
                 fontSize = 14.sp,
-
                 color = Color.Gray
             )
         }
@@ -332,17 +164,12 @@ fun InventoryInfoRow(
     title: String,
     value: String
 ) {
-
     Row(
-
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 8.dp),
-
-        horizontalArrangement =
-            Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
         Text(
             text = title,
             color = Color.Gray,
@@ -350,11 +177,8 @@ fun InventoryInfoRow(
         )
 
         Text(
-
             text = value,
-
             fontSize = 16.sp,
-
             fontWeight = FontWeight.SemiBold
         )
     }
