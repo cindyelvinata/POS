@@ -20,33 +20,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pos.data.model.CashAccount
-import com.example.pos.data.model.CashLog
+import com.example.pos.model.CashAccount
+import com.example.pos.model.CashLog
 import com.example.pos.viewmodel.KasUiState
 import com.example.pos.viewmodel.KasViewModel
 
 /* =============================================
  * ADD KAS SCREEN
- *
- * Mode 1 (cashAccountId == null) → form buat kas baru
- * Mode 2 (cashAccountId != null) → detail kas dengan tab
- *
- * Tab layout:
- * ┌─────────────────────────────────────────┐
- * │  [Info & Aksi]   [Log Kas]              │  ← TabRow
- * ├─────────────────────────────────────────┤
- * │  Tab 0: Kartu saldo biru + aksi         │
- * │  Tab 1: Histori log transaksi           │
- * └─────────────────────────────────────────┘
- *
- * Perubahan dari versi sebelumnya:
- * - Tab indicator lebih tebal & warna primary
- * - Kartu saldo: background primary, saldo besar centered,
- *   badge "Aktif" di bawah saldo
- * - Tombol Tambah (hijau) + Kurangi (merah) full-width
- * - Pengaturan sebagai OutlinedButton dengan icon emoji
- * - Log Kas: CashLogItem dengan left border berwarna
- *   + running balance di kanan bawah
  * ============================================= */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

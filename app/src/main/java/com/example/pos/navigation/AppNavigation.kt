@@ -23,10 +23,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.pos.model.Product
 import com.example.pos.ui.theme.DashboardScreen
-import com.example.pos.ui.theme.InventoryLogScreen
-import com.example.pos.ui.theme.LoginScreen
-import com.example.pos.ui.theme.ProductScreen
-import com.example.pos.ui.theme.RegisterScreen
+import com.example.pos.ui.theme.produk.InventoryLogScreen
+import com.example.pos.ui.theme.login.LoginScreen
+import com.example.pos.ui.theme.produk.ProductScreen
+import com.example.pos.ui.theme.login.RegisterScreen
 import com.example.pos.ui.theme.kas.AddKasScreen
 import com.example.pos.ui.theme.kas.KasScreen
 import com.example.pos.viewmodel.AuthCheckState
@@ -35,6 +35,10 @@ import com.example.pos.viewmodel.AuthViewModel
 import com.example.pos.viewmodel.InventoryLogViewModel
 import com.example.pos.viewmodel.KasViewModel
 import com.example.pos.viewmodel.ProductViewModel
+import com.example.pos.viewmodel.CustomerViewModel
+import com.example.pos.viewmodel.ExpenseViewModel
+import com.example.pos.ui.theme.CustomerScreen
+import com.example.pos.ui.theme.ExpenseScreen
 
 data class BottomNavItem(
     val route: String,
@@ -162,10 +166,6 @@ fun MainNavHost(
                         NavigationBarItem(
                             selected = selected,
                             onClick = {
-                                if (item.route == "laporan" || item.route == "pelanggan") {
-                                    return@NavigationBarItem
-                                }
-
                                 navController.navigate(item.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {
                                         saveState = true
@@ -325,12 +325,7 @@ fun MainNavHost(
                     },
                     selectedProduct = selectedProduct,
                     onDismissDetail = { selectedProduct = null },
-                    onLogoutClick = {
-                        authViewModel.logout()
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(Screen.Dashboard.route) { inclusive = true }
-                        }
-                    }
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
 
@@ -344,14 +339,37 @@ fun MainNavHost(
 
                 InventoryLogScreen(
                     inventoryLogUiState = inventoryLogUiState.value,
-                    onBackToProduct = {
-                        navController.navigate(Screen.Product.route) {
-                            popUpTo(Screen.Product.route) { inclusive = false }
-                            launchSingleTop = true
-                        }
-                    }
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
+
+            composable(Screen.Customer.route) {
+                val customerViewModel: CustomerViewModel = viewModel()
+
+                LaunchedEffect(Unit) {
+                    customerViewModel.loadCustomers()
+                    customerViewModel.loadCustomerLogs()
+                }
+
+                CustomerScreen(
+                    customerViewModel = customerViewModel
+                )
+            }
+
+            composable(Screen.Expense.route) {
+                val expenseViewModel: ExpenseViewModel = viewModel()
+
+                LaunchedEffect(Unit) {
+                    expenseViewModel.loadExpenses()
+                    expenseViewModel.loadActiveCashAccounts()
+                }
+
+                ExpenseScreen(
+                    isAdmin = isAdmin,
+                    expenseViewModel = expenseViewModel
+                )
+            }
+
         }
     }
 }

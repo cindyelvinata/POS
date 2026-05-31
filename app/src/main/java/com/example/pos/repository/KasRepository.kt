@@ -1,8 +1,8 @@
 package com.example.pos.data.repository
 
 import com.example.pos.data.SupabaseClientProvider
-import com.example.pos.data.model.CashAccount
-import com.example.pos.data.model.CashLog
+import com.example.pos.model.CashAccount
+import com.example.pos.model.CashLog
 import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.datetime.Clock

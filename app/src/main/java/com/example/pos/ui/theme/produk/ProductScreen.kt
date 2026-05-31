@@ -1,10 +1,12 @@
-package com.example.pos.ui.theme
+package com.example.pos.ui.theme.produk
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -36,9 +38,9 @@ fun ProductScreen(
     onDeleteClick: (Product) -> Unit,
     onDetailClick: (Product) -> Unit,
     onInventoryLogClick: () -> Unit,
-    onLogoutClick: () -> Unit,
     selectedProduct: Product?,
-    onDismissDetail: () -> Unit
+    onDismissDetail: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -50,9 +52,15 @@ fun ProductScreen(
                         color = Color.White
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Kembali")
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         }

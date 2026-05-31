@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pos.data.model.CashLog
+import com.example.pos.model.CashLog
 import com.example.pos.ui.theme.kas.formatDate
 import com.example.pos.ui.theme.kas.formatRupiah
 import com.example.pos.viewmodel.KasViewModel
@@ -54,7 +54,7 @@ fun DashboardScreen(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        if (isAdmin) {
+                        val roleLabel = if (isAdmin) "Admin" else "Kasir"
                             Box(
                                 modifier = Modifier
                                     .background(
@@ -64,13 +64,12 @@ fun DashboardScreen(
                                     .padding(horizontal = 10.dp, vertical = 3.dp)
                             ) {
                                 Text(
-                                    text = "Admin",
+                                    text = roleLabel,
                                     color = Color.White,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
-                        }
                     }
                 },
                 actions = {

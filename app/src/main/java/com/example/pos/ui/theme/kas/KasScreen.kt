@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.pos.data.model.CashAccount
+import com.example.pos.model.CashAccount
 import com.example.pos.viewmodel.KasUiState
 import com.example.pos.viewmodel.KasViewModel
 import java.text.NumberFormat

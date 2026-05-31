@@ -2,8 +2,8 @@ package com.example.pos.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.pos.data.model.CashAccount
-import com.example.pos.data.model.CashLog
+import com.example.pos.model.CashAccount
+import com.example.pos.model.CashLog
 import com.example.pos.data.repository.KasRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
