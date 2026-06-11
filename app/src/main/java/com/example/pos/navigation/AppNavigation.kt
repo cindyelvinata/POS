@@ -29,6 +29,7 @@ import com.example.pos.ui.theme.produk.ProductScreen
 import com.example.pos.ui.theme.login.RegisterScreen
 import com.example.pos.ui.theme.kas.AddKasScreen
 import com.example.pos.ui.theme.kas.KasScreen
+import com.example.pos.ui.theme.transaction.TransactionScreen
 import com.example.pos.viewmodel.AuthCheckState
 import com.example.pos.viewmodel.AuthUiState
 import com.example.pos.viewmodel.AuthViewModel
@@ -37,6 +38,7 @@ import com.example.pos.viewmodel.KasViewModel
 import com.example.pos.viewmodel.ProductViewModel
 import com.example.pos.viewmodel.CustomerViewModel
 import com.example.pos.viewmodel.ExpenseViewModel
+import com.example.pos.viewmodel.TransactionViewModel
 import com.example.pos.ui.theme.CustomerScreen
 import com.example.pos.ui.theme.ExpenseScreen
 
@@ -55,16 +57,16 @@ val bottomNavItems = listOf(
         unselectedIcon = Icons.Outlined.Home
     ),
     BottomNavItem(
-        route = Screen.Kas.route,
-        label = "Kas",
-        selectedIcon = Icons.Filled.AccountBalanceWallet,
-        unselectedIcon = Icons.Outlined.AccountBalanceWallet
+        route = Screen.Transaction.route,
+        label = "Transaksi",
+        selectedIcon = Icons.Filled.ShoppingCart,
+        unselectedIcon = Icons.Outlined.ShoppingCart
     ),
     BottomNavItem(
         route = Screen.Product.route,
         label = "Produk",
         selectedIcon = Icons.Filled.Inventory,
-        unselectedIcon = Icons.Outlined.Inventory
+        unselectedIcon = Icons.Filled.Inventory
     ),
     BottomNavItem(
         route = "laporan",
@@ -272,6 +274,15 @@ fun MainNavHost(
                     onNavigateToDetailKas = { kasId ->
                         navController.navigate(Screen.DetailKas.createRoute(kasId))
                     }
+                )
+            }
+
+            composable(Screen.Transaction.route) {
+                val transactionViewModel: TransactionViewModel = viewModel()
+
+                TransactionScreen(
+                    isAdmin = isAdmin,
+                    viewModel = transactionViewModel
                 )
             }
 

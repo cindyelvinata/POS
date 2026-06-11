@@ -11,9 +11,9 @@ class ProductRepository {
     private val supabase =
         SupabaseClientProvider.client
 
-    /*
-     * Ambil hanya produk aktif
-     */
+    private val inventoryLogRepository =
+        InventoryLogRepository()
+
     suspend fun getProducts(): List<Product> {
 
         return supabase
@@ -27,9 +27,6 @@ class ProductRepository {
             .decodeList<Product>()
     }
 
-    /*
-     * Tambah produk
-     */
     suspend fun addProduct(
         name: String,
         price: Double,
@@ -48,9 +45,6 @@ class ProductRepository {
             .insert(product)
     }
 
-    /*
-     * Update produk
-     */
     suspend fun updateProduct(
         id: String,
         name: String,
@@ -58,6 +52,22 @@ class ProductRepository {
         stock: Double,
         isActive: Boolean
     ) {
+
+        println("========== UPDATE PRODUCT ==========")
+
+        val currentProduct = supabase
+            .from("products")
+            .select {
+                filter {
+                    eq("id", id)
+                }
+            }
+            .decodeSingle<Product>()
+
+        println("ID : $id")
+        println("Nama Lama : ${currentProduct.name}")
+        println("Stock Lama : ${currentProduct.stock}")
+        println("Stock Baru : $stock")
 
         val product = ProductUpdate(
             name = name,
@@ -74,13 +84,30 @@ class ProductRepository {
                     eq("id", id)
                 }
             }
+
+        println("UPDATE PRODUK BERHASIL")
+
+        if (currentProduct.stock != stock) {
+
+            println("STOCK BERUBAH")
+            println("MEMBUAT INVENTORY LOG")
+
+            inventoryLogRepository.createUpdateStockLog(
+                productId = id,
+                stockBefore = currentProduct.stock,
+                stockAfter = stock
+            )
+
+            println("INVENTORY LOG BERHASIL")
+        } else {
+
+            println("STOCK TIDAK BERUBAH")
+        }
     }
 
-    /*
-     * Soft delete produk
-     * hanya ubah is_active menjadi false
-     */
-    suspend fun deleteProduct(id: String) {
+    suspend fun deleteProduct(
+        id: String
+    ) {
 
         supabase
             .from("products")

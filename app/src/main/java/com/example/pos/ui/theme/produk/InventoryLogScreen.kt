@@ -100,49 +100,106 @@ fun InventoryLogScreen(
 fun InventoryLogItem(
     log: InventoryLog
 ) {
+
+    val type = log.type.lowercase()
+
+    val isKeluar =
+        type == "terjual" ||
+                (
+                        type == "edit" &&
+                                log.stockAfter < log.stockBefore
+                        )
+
+    val badgeText =
+        if (isKeluar) {
+            "KELUAR"
+        } else {
+            "MASUK"
+        }
+
+    val badgeBg =
+        if (isKeluar) {
+            Color(0xFFFFE5E5)
+        } else {
+            Color(0xFFE5FFF0)
+        }
+
+    val badgeColor =
+        if (isKeluar) {
+            Color.Red
+        } else {
+            Color(0xFF00A651)
+        }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 1.dp
+        )
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+
                 Text(
                     text = log.productName,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
 
-                val isOut = log.type == "OUT" || log.type.lowercase() == "terjual"
-
                 Box(
                     modifier = Modifier
                         .background(
-                            color = if (isOut) Color(0xFFFFE5E5) else Color(0xFFE5FFF0),
+                            color = badgeBg,
                             shape = RoundedCornerShape(12.dp)
                         )
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(
+                            horizontal = 14.dp,
+                            vertical = 6.dp
+                        )
                 ) {
+
                     Text(
-                        text = if (isOut) "TERJUAL" else "MASUK",
-                        color = if (isOut) Color.Red else Color(0xFF00A651),
+                        text = badgeText,
+                        color = badgeColor,
                         fontWeight = FontWeight.Bold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(
+                modifier = Modifier.height(18.dp)
+            )
 
-            InventoryInfoRow("Jumlah", "${log.quantity}")
-            InventoryInfoRow("Stock Sebelum", "${log.stockBefore}")
-            InventoryInfoRow("Stock Sesudah", "${log.stockAfter}")
+            InventoryInfoRow(
+                title = "Jumlah",
+                value = "${log.quantity}"
+            )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            InventoryInfoRow(
+                title = "Stock Sebelum",
+                value = "${log.stockBefore}"
+            )
+
+            InventoryInfoRow(
+                title = "Stock Sesudah",
+                value = "${log.stockAfter}"
+            )
+
+            Spacer(
+                modifier = Modifier.height(14.dp)
+            )
 
             Text(
                 text = log.description,
@@ -150,7 +207,9 @@ fun InventoryLogItem(
                 color = Color.DarkGray
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(
+                modifier = Modifier.height(14.dp)
+            )
 
             Text(
                 text = log.createdAt,

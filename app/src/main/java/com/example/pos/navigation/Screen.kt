@@ -12,6 +12,8 @@ sealed class Screen(val route: String) {
 
     object Kas : Screen("kas")
 
+    object Transaction : Screen("transaksi")
+
     object AddKas : Screen("add_kas")
 
     object Product : Screen("product")
