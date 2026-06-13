@@ -2,10 +2,22 @@ package com.example.pos.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Primary Blue
+val Blue10  = Color(0xFF001E66)
+val Blue20  = Color(0xFF003399)
+val Blue40  = Color(0xFF005BFF)   // ← primary light theme
+val Blue80  = Color(0xFF99BAFF)   // ← primary dark theme
+val Blue90  = Color(0xFFCCDDFF)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+// Secondary — teal/cyan aksen
+val Teal40  = Color(0xFF26A69A)
+val Teal80  = Color(0xFF80CBC4)
+
+// Neutral
+val Grey10  = Color(0xFF1A1C1E)
+val Grey90  = Color(0xFFE2E2E5)
+val Grey99  = Color(0xFFFAFAFF)
+
+// Error
+val Red40   = Color(0xFFEF5350)
+val Red80   = Color(0xFFFFB4AB)
