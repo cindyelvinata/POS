@@ -39,8 +39,8 @@ import com.example.pos.viewmodel.ProductViewModel
 import com.example.pos.viewmodel.CustomerViewModel
 import com.example.pos.viewmodel.ExpenseViewModel
 import com.example.pos.viewmodel.TransactionViewModel
-import com.example.pos.ui.theme.CustomerScreen
-import com.example.pos.ui.theme.ExpenseScreen
+import com.example.pos.ui.theme.customer.CustomerScreen
+import com.example.pos.ui.theme.expense.ExpenseScreen
 
 data class BottomNavItem(
     val route: String,

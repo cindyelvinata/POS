@@ -1,4 +1,4 @@
-package com.example.pos.ui.theme
+package com.example.pos.ui.theme.expense
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -359,7 +360,7 @@ fun ExpenseItem(
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
-                            textDecoration = if (isCancelled) androidx.compose.ui.text.style.TextDecoration.LineThrough else androidx.compose.ui.text.style.TextDecoration.None
+                            textDecoration = if (isCancelled) TextDecoration.LineThrough else TextDecoration.None
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))

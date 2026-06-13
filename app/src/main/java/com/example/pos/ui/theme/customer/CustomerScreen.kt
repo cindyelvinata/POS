@@ -1,4 +1,4 @@
-package com.example.pos.ui.theme
+package com.example.pos.ui.theme.customer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

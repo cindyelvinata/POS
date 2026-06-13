@@ -21,12 +21,3 @@ val Grey99  = Color(0xFFFAFAFF)
 // Error
 val Red40   = Color(0xFFEF5350)
 val Red80   = Color(0xFFFFB4AB)
-
-// compile error di file lain yang masih pakai
-val Purple80      = Blue80
-val PurpleGrey80  = Teal80
-val Pink80        = Blue90
-
-val Purple40      = Blue40
-val PurpleGrey40  = Teal40
-val Pink40        = Blue20
