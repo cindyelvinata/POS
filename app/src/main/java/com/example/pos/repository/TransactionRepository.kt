@@ -155,9 +155,6 @@ class TransactionRepository {
         val changeAmount =
             paidAmount - total
 
-        val newCashBalance =
-            cashAccount.currentBalance + total
-
         val sale =
             createSale(
                 customer = customer,
@@ -212,72 +209,6 @@ class TransactionRepository {
                     stockAfter = stockAfter
                 )
         }
-
-        supabase
-            .from("cash_accounts")
-            .update(
-                {
-                    set(
-                        "current_balance",
-                        newCashBalance
-                    )
-
-                    set(
-                        "updated_at",
-                        now
-                    )
-                }
-            ) {
-
-                filter {
-                    eq(
-                        "id",
-                        cashAccount.id
-                    )
-                }
-            }
-
-        supabase
-            .from("cash_logs")
-            .insert(
-                buildJsonObject {
-
-                    put(
-                        "cash_accounts_id",
-                        cashAccount.id
-                    )
-
-                    put(
-                        "amount",
-                        total
-                    )
-
-                    put(
-                        "running_balance",
-                        newCashBalance
-                    )
-
-                    put(
-                        "type",
-                        "in"
-                    )
-
-                    put(
-                        "source",
-                        "transaksi manual"
-                    )
-
-                    put(
-                        "notes",
-                        "Penjualan ${sale.id}"
-                    )
-
-                    put(
-                        "created_at",
-                        now
-                    )
-                }
-            )
     }
 
     private suspend fun createSale(
